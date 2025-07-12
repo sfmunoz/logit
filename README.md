@@ -23,18 +23,26 @@ logit: Simple Golang logging/slog library
 
 ## TL;DR
 
-Install:
+Init module within an empty folder:
 ```
-$ go get github.com/sfmunoz/logit
-```
-Simple use:
+$ go mod init example.com/demo
 
+$ cat go.mod 
+module example.com/demo
+
+go 1.24.5
 ```
+Download/install **logit**:
+```
+$ go get -u github.com/sfmunoz/logit
+```
+Create **main.go** file:
+```go
 package main
 
 import "github.com/sfmunoz/logit"
 
-log := logit.Logit().
+var log = logit.Logit().
 	WithLevel(logit.LevelNotice).
 	With("app", "my-app")
 
@@ -47,17 +55,22 @@ func main() {
 	log.Error("error-msg")
 }
 ```
-Detailed configuration:
+Run it:
 ```
+$ go run main.go
+```
+Detailed configuration:
+```go
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/sfmunoz/logit"
 )
 
-log := logit.Logit().
+var log = logit.Logit().
 	With("app", "my-app").
 	WithWriter(os.Stderr).
 	WithSource(true).
