@@ -131,20 +131,6 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	}
 	b.WriteString(fk[0](nil) + pref + key + "=" + fk[1](nil) + fv[0](nil))
 	switch kind {
-	case slog.KindString:
-		b.WriteString(val.String())
-	case slog.KindInt64:
-		b.Printf("%d", val.Int64())
-	case slog.KindUint64:
-		b.Printf("%d", val.Uint64())
-	case slog.KindFloat64:
-		b.Printf("%g", val.Float64())
-	case slog.KindBool:
-		b.Printf("%t", val.Bool())
-	case slog.KindDuration:
-		b.WriteString(val.Duration().String())
-	case slog.KindTime:
-		b.WriteString(val.Time().String())
 	case slog.KindAny:
 		switch cv := val.Any().(type) {
 		case encoding.TextMarshaler:
@@ -157,6 +143,24 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 		default:
 			fmt.Fprintf(b, "%+v", val.Any())
 		}
+	case slog.KindBool:
+		b.Printf("%t", val.Bool())
+	case slog.KindDuration:
+		b.WriteString(val.Duration().String())
+	case slog.KindFloat64:
+		b.Printf("%g", val.Float64())
+	case slog.KindInt64:
+		b.Printf("%d", val.Int64())
+	case slog.KindString:
+		b.WriteString(val.String())
+	case slog.KindTime:
+		b.WriteString(val.Time().String())
+	case slog.KindUint64:
+		b.Printf("%d", val.Uint64())
+	case slog.KindGroup:
+		b.Printf("!error: slog.KindGroup already handled")
+	case slog.KindLogValuer:
+		fmt.Fprintf(b, "%+v", val.Any())
 	}
 	b.WriteString(fv[1](nil) + " ")
 }
