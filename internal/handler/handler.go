@@ -10,7 +10,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"runtime"
 	"sync"
 	"time"
 
@@ -89,7 +88,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 	buf.PushLevel(r.Level)
 	if h.addSource {
-		buf.PushSource(rec2src(r), &r.Level)
+		buf.PushSource(r)
 	}
 	buf.PushMessage(r)
 	for _, attr := range h.attrs {
@@ -125,17 +124,4 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 	hc := h.clone()
 	hc.groups = append(hc.groups, name)
 	return hc
-}
-
-func rec2src(r slog.Record) *slog.Source {
-	fs := runtime.CallersFrames([]uintptr{r.PC})
-	f, _ := fs.Next()
-	if f.File == "" {
-		return nil
-	}
-	return &slog.Source{
-		Function: f.Function,
-		File:     f.File,
-		Line:     f.Line,
-	}
 }

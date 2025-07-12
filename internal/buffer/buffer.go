@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -84,17 +85,18 @@ func (b *Buffer) PushLevel(l slog.Level) {
 	b.WriteString(b.col.LvlFunc[0](&l) + lMap[l] + b.col.LvlFunc[1](&l) + " ")
 }
 
-func (b *Buffer) PushSource(s *slog.Source, l *slog.Level) {
+func (b *Buffer) PushSource(r slog.Record) {
+	s := rec2src(r)
 	if s == nil {
 		return
 	}
 	dir, file := filepath.Split(s.File)
 	b.Printf(
 		"%s<%s:%d>%s ",
-		b.col.SrcFunc[0](l),
+		b.col.SrcFunc[0](&r.Level),
 		filepath.Join(filepath.Base(dir), file),
 		s.Line,
-		b.col.SrcFunc[1](l),
+		b.col.SrcFunc[1](&r.Level),
 	)
 }
 
@@ -154,8 +156,6 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 				break
 			}
 			b.WriteString(string(data))
-		case *slog.Source:
-			b.PushSource(cv, nil)
 		default:
 			fmt.Fprintf(b, "%+v", val.Any())
 		}
@@ -179,4 +179,17 @@ func dur2Str(dur time.Duration) string {
 	dur -= secs * time.Second
 	msecs := dur / time.Millisecond
 	return fmt.Sprintf("%dd%02dh%02dm%02d.%03ds", days, hours, mins, secs, msecs)
+}
+
+func rec2src(r slog.Record) *slog.Source {
+	fs := runtime.CallersFrames([]uintptr{r.PC})
+	f, _ := fs.Next()
+	if f.File == "" {
+		return nil
+	}
+	return &slog.Source{
+		Function: f.Function,
+		File:     f.File,
+		Line:     f.Line,
+	}
 }
