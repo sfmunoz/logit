@@ -55,10 +55,10 @@ func main() {
 	log.Error("error-msg")
 }
 ```
-Run it:
-```
-$ go run main.go
-```
+Run it using `go run main.go`:
+
+![20250712_173105.png](../assets/20250712_173105.png)
+
 Detailed configuration:
 ```go
 package main
@@ -84,6 +84,9 @@ func main() {
 	log.Info("hello world")
 }
 ```
+Run it too with `go run main.go`:
+
+![20250712_173226.png](../assets/20250712_173226.png)
 
 ## References
 
