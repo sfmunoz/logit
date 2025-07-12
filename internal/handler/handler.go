@@ -105,7 +105,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	buf.WriteString("\n")
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	_, err := h.out.Write(buf.Bytes())
+	_, err := buf.WriteTo(h.out)
 	return err
 }
 
