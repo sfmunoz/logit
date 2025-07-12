@@ -81,8 +81,8 @@ func (b *Buffer) PushUptime(r slog.Record) {
 	b.WriteString(b.col.UptFunc[0](&r.Level) + dur2Str(r.Time.UTC().Sub(b.tsStart)) + b.col.UptFunc[1](&r.Level) + " ")
 }
 
-func (b *Buffer) PushLevel(l slog.Level) {
-	b.WriteString(b.col.LvlFunc[0](&l) + lMap[l] + b.col.LvlFunc[1](&l) + " ")
+func (b *Buffer) PushLevel(r slog.Record) {
+	b.WriteString(b.col.LvlFunc[0](&r.Level) + lMap[r.Level] + b.col.LvlFunc[1](&r.Level) + " ")
 }
 
 func (b *Buffer) PushSource(r slog.Record) {
@@ -147,8 +147,6 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 		b.WriteString(val.Time().String())
 	case slog.KindAny:
 		switch cv := val.Any().(type) {
-		case slog.Level:
-			b.PushLevel(cv)
 		case encoding.TextMarshaler:
 			data, err := cv.MarshalText()
 			if err != nil {

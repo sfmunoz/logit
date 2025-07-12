@@ -86,7 +86,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	if h.uptime {
 		buf.PushUptime(r)
 	}
-	buf.PushLevel(r.Level)
+	buf.PushLevel(r)
 	if h.addSource {
 		buf.PushSource(r)
 	}
