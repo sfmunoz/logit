@@ -78,7 +78,7 @@ func (b *Buffer) PushUptime(r slog.Record) {
 	if r.Time.IsZero() {
 		return
 	}
-	b.WriteString(b.col.UptFunc[0](&r.Level) + dur2Str(r.Time.UTC().Sub(b.tsStart)) + b.col.UptFunc[1](&r.Level) + " ")
+	b.WriteString(b.col.UptFunc[0](&r.Level) + dur2str(r.Time.UTC().Sub(b.tsStart), true) + b.col.UptFunc[1](&r.Level) + " ")
 }
 
 func (b *Buffer) PushLevel(r slog.Record) {
@@ -146,7 +146,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	case slog.KindBool:
 		b.Printf("%t", val.Bool())
 	case slog.KindDuration:
-		b.WriteString(val.Duration().String())
+		b.WriteString(dur2str(val.Duration(), true))
 	case slog.KindFloat64:
 		b.Printf("%g", val.Float64())
 	case slog.KindInt64:
@@ -165,11 +165,10 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	b.WriteString(fv[1](nil) + " ")
 }
 
-func dur2Str(dur time.Duration) string {
-	// I don't like time.Duration.String() -> time.Duration.format()
-	// Python example:
-	//   h,m,s,ms = int((t/3600000)%3600),int((t/60000)%60),int((t/1000)%60),int(t%1000)
-	//   record.relativeCreated = "{0:02d}:{1:02d}:{2:02d}.{3:03d}".format(h,m,s,ms)
+func dur2str(dur time.Duration, adhoc bool) string {
+	if !adhoc {
+		return dur.String()
+	}
 	timeDay := 24 * time.Hour
 	days := dur / timeDay
 	dur -= days * timeDay
