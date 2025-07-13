@@ -12,19 +12,19 @@ import (
 )
 
 const (
-	AnsiReset  = "\033[0m"
-	AnsiBold   = "\033[1m"
-	AnsiFaint  = "\033[2m"
-	AnsiNormal = "\033[22m"
+	ansiReset  = "\033[0m"
+	ansiBold   = "\033[1m"
+	ansiFaint  = "\033[2m"
+	ansiNormal = "\033[22m"
 
-	AnsiBlack   = "\033[30m"
-	AnsiRed     = "\033[31m"
-	AnsiGreen   = "\033[32m"
-	AnsiYellow  = "\033[33m"
-	AnsiBlue    = "\033[34m"
-	AnsiMagenta = "\033[35m"
-	AnsiCyan    = "\033[36m"
-	AnsiWhite   = "\033[37m"
+	ansiBlack   = "\033[30m"
+	ansiRed     = "\033[31m"
+	ansiGreen   = "\033[32m"
+	ansiYellow  = "\033[33m"
+	ansiBlue    = "\033[34m"
+	ansiMagenta = "\033[35m"
+	ansiCyan    = "\033[36m"
+	ansiWhite   = "\033[37m"
 )
 
 type colFunc func(...slog.Level) string
@@ -41,74 +41,75 @@ type Color struct {
 	ErVFunc []colFunc
 }
 
-func cNone(...slog.Level) string {
-	return ""
-}
-
-var cMap = map[slog.Level]string{
-	common.LevelTrace:  AnsiCyan + AnsiFaint,
-	common.LevelDebug:  AnsiWhite + AnsiFaint,
-	common.LevelInfo:   AnsiGreen,
-	common.LevelNotice: AnsiBlue,
-	common.LevelWarn:   AnsiYellow,
-	common.LevelError:  AnsiRed,
-	common.LevelFatal:  AnsiRed + AnsiBold,
-}
-
-func cOn(s string) colFunc {
-	if s != "" {
-		return func(...slog.Level) string {
-			return s
-		}
+func cDynamic() colFunc {
+	var m = map[slog.Level]string{
+		common.LevelTrace:  ansiCyan + ansiFaint,
+		common.LevelDebug:  ansiWhite + ansiFaint,
+		common.LevelInfo:   ansiGreen,
+		common.LevelNotice: ansiBlue,
+		common.LevelWarn:   ansiYellow,
+		common.LevelError:  ansiRed,
+		common.LevelFatal:  ansiRed + ansiBold,
 	}
 	return func(level ...slog.Level) string {
 		if len(level) < 1 {
 			return ""
 		}
-		return cMap[level[0]]
+		return m[level[0]]
 	}
 }
 
-func cOff(...slog.Level) string {
-	return AnsiReset
+func cSet(s string) colFunc {
+	return func(...slog.Level) string {
+		return s
+	}
+}
+
+func cReset() colFunc {
+	return cSet(ansiReset)
+}
+
+func cNone() colFunc {
+	return cSet("")
 }
 
 func NewColor(cMode common.ColorMode) *Color {
+	// ColorOff
 	if cMode == common.ColorOff {
 		return &Color{
-			TimFunc: []colFunc{cNone, cNone},
-			UptFunc: []colFunc{cNone, cNone},
-			LvlFunc: []colFunc{cNone, cNone},
-			SrcFunc: []colFunc{cNone, cNone},
-			MsgFunc: []colFunc{cNone, cNone},
-			KeyFunc: []colFunc{cNone, cNone},
-			ValFunc: []colFunc{cNone, cNone},
-			ErKFunc: []colFunc{cNone, cNone},
-			ErVFunc: []colFunc{cNone, cNone},
+			TimFunc: []colFunc{cNone(), cNone()},
+			UptFunc: []colFunc{cNone(), cNone()},
+			LvlFunc: []colFunc{cNone(), cNone()},
+			SrcFunc: []colFunc{cNone(), cNone()},
+			MsgFunc: []colFunc{cNone(), cNone()},
+			KeyFunc: []colFunc{cNone(), cNone()},
+			ValFunc: []colFunc{cNone(), cNone()},
+			ErKFunc: []colFunc{cNone(), cNone()},
+			ErVFunc: []colFunc{cNone(), cNone()},
 		}
 	}
 	// ColorSmart
 	c := &Color{
-		TimFunc: []colFunc{cOn(AnsiWhite + AnsiFaint), cOff},
-		UptFunc: []colFunc{cOn(AnsiCyan + AnsiFaint), cOff},
-		LvlFunc: []colFunc{cOn(""), cOff},
-		SrcFunc: []colFunc{cOn(AnsiWhite + AnsiFaint), cOff},
-		MsgFunc: []colFunc{cOn(AnsiWhite), cOff},
-		KeyFunc: []colFunc{cOn(AnsiWhite + AnsiFaint), cOff},
-		ValFunc: []colFunc{cOn(AnsiWhite), cOff},
-		ErKFunc: []colFunc{cOn(AnsiRed), cOff},
-		ErVFunc: []colFunc{cOn(AnsiRed + AnsiBold), cOff},
+		TimFunc: []colFunc{cSet(ansiWhite + ansiFaint), cReset()},
+		UptFunc: []colFunc{cSet(ansiCyan + ansiFaint), cReset()},
+		LvlFunc: []colFunc{cDynamic(), cReset()},
+		SrcFunc: []colFunc{cSet(ansiWhite + ansiFaint), cReset()},
+		MsgFunc: []colFunc{cSet(ansiWhite), cReset()},
+		KeyFunc: []colFunc{cSet(ansiWhite + ansiFaint), cReset()},
+		ValFunc: []colFunc{cSet(ansiWhite), cReset()},
+		ErKFunc: []colFunc{cSet(ansiRed), cReset()},
+		ErVFunc: []colFunc{cSet(ansiRed + ansiBold), cReset()},
 	}
 	// ColorMedium / ColorFull
 	switch cMode {
 	case common.ColorMedium:
-		c.SrcFunc = []colFunc{cOn(""), cOff}
-		c.MsgFunc = []colFunc{cOn(""), cOff}
+		c.SrcFunc = []colFunc{cDynamic(), cReset()}
+		c.MsgFunc = []colFunc{cDynamic(), cReset()}
 	case common.ColorFull:
-		c.TimFunc = []colFunc{cOn(""), cOff}
-		c.UptFunc = []colFunc{cOn(""), cOff}
-		c.SrcFunc = []colFunc{cOn(""), cOff}
-		c.MsgFunc = []colFunc{cOn(""), cOff}
+		c.TimFunc = []colFunc{cDynamic(), cReset()}
+		c.UptFunc = []colFunc{cDynamic(), cReset()}
+		c.SrcFunc = []colFunc{cDynamic(), cReset()}
+		c.MsgFunc = []colFunc{cDynamic(), cReset()}
 	}
 	return c
 }
