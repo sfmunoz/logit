@@ -6,28 +6,18 @@
 package buffer
 
 import (
-	"bytes"
 	"encoding"
 	"fmt"
+	"io"
 	"log/slog"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/sfmunoz/logit/internal/color"
 	"github.com/sfmunoz/logit/internal/common"
 )
-
-type Buffer struct {
-	*bytes.Buffer
-	timeFmt   string
-	col       *color.Color
-	tsStart   time.Time
-	groups    []string
-	symbolSet common.SymbolSet
-}
 
 const (
 	lt = common.LevelTrace
@@ -49,52 +39,60 @@ var lMap = map[common.SymbolSet]map[slog.Level]string{
 	sd: {lt: "ⓣ", ld: "ⓓ", li: "ⓓ", ln: "ⓝ", lw: "ⓦ", le: "ⓔ", lf: "ⓕ"},
 }
 
-var pool = sync.Pool{
-	New: func() any {
-		return &Buffer{
-			Buffer: bytes.NewBuffer(make([]byte, 0, 1024)),
-		}
-	},
+type Buffer struct {
+	arr       []string
+	timeFmt   string
+	col       *color.Color
+	tsStart   time.Time
+	groups    []string
+	symbolSet common.SymbolSet
 }
 
 func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet) *Buffer {
-	b := pool.Get().(*Buffer)
-	b.timeFmt = timeFmt
-	b.col = col
-	b.tsStart = tsStart
-	b.groups = groups
-	b.symbolSet = symbolSet
-	return b
-}
-
-func (b *Buffer) Release() {
-	if b.Cap() > 16384 {
-		return
+	return &Buffer{
+		arr:       make([]string, 0, 20),
+		timeFmt:   timeFmt,
+		col:       col,
+		tsStart:   tsStart,
+		groups:    groups,
+		symbolSet: symbolSet,
 	}
-	b.Reset()
-	pool.Put(b)
 }
 
-func (b *Buffer) Printf(format string, a ...any) {
-	fmt.Fprintf(b, format, a...)
+func (b *Buffer) Len() int {
+	return len(b.arr)
+}
+
+func (b *Buffer) WriteTo(w io.Writer) (n int64, err error) {
+	tot, err := w.Write([]byte(strings.Join(b.arr, " ") + "\n"))
+	return int64(tot), err
 }
 
 func (b *Buffer) PushTime(r slog.Record) {
 	if r.Time.IsZero() {
 		return
 	}
-	b.WriteString(b.col.TimFunc[0](r.Level) + r.Time.Format(b.timeFmt) + b.col.TimFunc[1](r.Level) + " ")
+	b.arr = append(
+		b.arr,
+		b.col.TimFunc[0](r.Level)+r.Time.Format(b.timeFmt)+b.col.TimFunc[1](r.Level),
+	)
 }
 
 func (b *Buffer) PushUptime(r slog.Record) {
 	if r.Time.IsZero() {
 		return
 	}
-	b.WriteString(b.col.UptFunc[0](r.Level) + dur2str(r.Time.UTC().Sub(b.tsStart), true) + b.col.UptFunc[1](r.Level) + " ")
+	b.arr = append(
+		b.arr,
+		b.col.UptFunc[0](r.Level)+dur2str(r.Time.UTC().Sub(b.tsStart), true)+b.col.UptFunc[1](r.Level),
+	)
 }
 
 func (b *Buffer) PushLevel(r slog.Record) {
-	b.WriteString(b.col.LvlFunc[0](r.Level) + lMap[b.symbolSet][r.Level] + b.col.LvlFunc[1](r.Level) + " ")
+	b.arr = append(
+		b.arr,
+		b.col.LvlFunc[0](r.Level)+lMap[b.symbolSet][r.Level]+b.col.LvlFunc[1](r.Level),
+	)
 }
 
 func (b *Buffer) PushSource(r slog.Record) {
@@ -103,17 +101,17 @@ func (b *Buffer) PushSource(r slog.Record) {
 		return
 	}
 	dir, file := filepath.Split(s.File)
-	b.Printf(
-		"%s<%s:%d>%s ",
-		b.col.SrcFunc[0](r.Level),
-		filepath.Join(filepath.Base(dir), file),
-		s.Line,
-		b.col.SrcFunc[1](r.Level),
+	b.arr = append(
+		b.arr,
+		fmt.Sprintf("%s<%s:%d>%s", b.col.SrcFunc[0](r.Level), filepath.Join(filepath.Base(dir), file), s.Line, b.col.SrcFunc[1](r.Level)),
 	)
 }
 
 func (b *Buffer) PushMessage(r slog.Record) {
-	b.WriteString(b.col.MsgFunc[0](r.Level) + r.Message + b.col.MsgFunc[1](r.Level) + " ")
+	b.arr = append(
+		b.arr,
+		b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
+	)
 }
 
 func (b *Buffer) PushAttr(attr slog.Attr) {
@@ -141,40 +139,41 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	if len(b.groups) > 0 {
 		pref = strings.Join(b.groups, ".") + "."
 	}
-	b.WriteString(fk[0]() + pref + key + "=" + fk[1]() + fv[0]())
+	tmp := fk[0]() + pref + key + "=" + fk[1]() + fv[0]()
 	switch kind {
 	case slog.KindAny:
 		switch cv := val.Any().(type) {
 		case encoding.TextMarshaler:
 			data, err := cv.MarshalText()
 			if err != nil {
-				b.Printf("!cv.MarshalText() error: %s", err)
+				tmp += fmt.Sprintf("!cv.MarshalText() error: %s", err)
 				break
 			}
-			b.WriteString(string(data))
+			tmp += string(data)
 		default:
-			fmt.Fprintf(b, "%+v", val.Any())
+			tmp += fmt.Sprintf("%+v", val.Any())
 		}
 	case slog.KindBool:
-		b.Printf("%t", val.Bool())
+		tmp += fmt.Sprintf("%t", val.Bool())
 	case slog.KindDuration:
-		b.WriteString(dur2str(val.Duration(), true))
+		tmp += dur2str(val.Duration(), true)
 	case slog.KindFloat64:
-		b.Printf("%g", val.Float64())
+		tmp += fmt.Sprintf("%g", val.Float64())
 	case slog.KindInt64:
-		b.Printf("%d", val.Int64())
+		tmp += fmt.Sprintf("%d", val.Int64())
 	case slog.KindString:
-		b.WriteString(val.String())
+		tmp += val.String()
 	case slog.KindTime:
-		b.WriteString(val.Time().String())
+		tmp += val.Time().String()
 	case slog.KindUint64:
-		b.Printf("%d", val.Uint64())
+		tmp += fmt.Sprintf("%d", val.Uint64())
 	case slog.KindGroup:
-		b.Printf("!error: slog.KindGroup already handled")
+		tmp += "!error: slog.KindGroup already handled"
 	case slog.KindLogValuer:
-		fmt.Fprintf(b, "%+v", val.Any())
+		tmp += fmt.Sprintf("%+v", val.Any())
 	}
-	b.WriteString(fv[1]() + " ")
+	tmp += fv[1]()
+	b.arr = append(b.arr, tmp)
 }
 
 func dur2str(dur time.Duration, adhoc bool) string {

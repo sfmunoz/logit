@@ -92,7 +92,6 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		_ = hh.Handle(ctx, r.Clone())
 	}
 	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet)
-	defer buf.Release()
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:
@@ -124,7 +123,6 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	if buf.Len() == 0 {
 		return nil
 	}
-	buf.WriteString("\n")
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	_, err := buf.WriteTo(h.out)
