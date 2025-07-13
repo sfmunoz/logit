@@ -57,7 +57,7 @@ func main() {
 ```
 Run it using `go run main.go`:
 
-![20250712_173105.png](../assets/20250712_173105.png)
+![20250712_173105.png](https://github.com/sfmunoz/logit/blob/assets/20250712_173105.png)
 
 Detailed configuration:
 ```go
@@ -86,7 +86,7 @@ func main() {
 ```
 Run it too with `go run main.go`:
 
-![20250712_173226.png](../assets/20250712_173226.png)
+![20250712_173226.png](https://github.com/sfmunoz/logit/blob/assets/20250712_173226.png)
 
 ## References
 
