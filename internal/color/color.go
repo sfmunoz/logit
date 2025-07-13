@@ -27,7 +27,7 @@ const (
 	AnsiWhite   = "\033[37m"
 )
 
-type colFunc func(*slog.Level) string
+type colFunc func(...slog.Level) string
 
 type Color struct {
 	TimFunc []colFunc
@@ -41,7 +41,7 @@ type Color struct {
 	ErVFunc []colFunc
 }
 
-func cNone(*slog.Level) string {
+func cNone(...slog.Level) string {
 	return ""
 }
 
@@ -57,19 +57,19 @@ var cMap = map[slog.Level]string{
 
 func cOn(s string) colFunc {
 	if s != "" {
-		return func(level *slog.Level) string {
+		return func(...slog.Level) string {
 			return s
 		}
 	}
-	return func(level *slog.Level) string {
-		if level == nil {
+	return func(level ...slog.Level) string {
+		if len(level) < 1 {
 			return ""
 		}
-		return cMap[*level]
+		return cMap[level[0]]
 	}
 }
 
-func cOff(level *slog.Level) string {
+func cOff(...slog.Level) string {
 	return AnsiReset
 }
 

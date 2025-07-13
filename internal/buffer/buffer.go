@@ -71,18 +71,18 @@ func (b *Buffer) PushTime(r slog.Record) {
 	if r.Time.IsZero() {
 		return
 	}
-	b.WriteString(b.col.TimFunc[0](&r.Level) + r.Time.Format(b.timeFmt) + b.col.TimFunc[1](&r.Level) + " ")
+	b.WriteString(b.col.TimFunc[0](r.Level) + r.Time.Format(b.timeFmt) + b.col.TimFunc[1](r.Level) + " ")
 }
 
 func (b *Buffer) PushUptime(r slog.Record) {
 	if r.Time.IsZero() {
 		return
 	}
-	b.WriteString(b.col.UptFunc[0](&r.Level) + dur2str(r.Time.UTC().Sub(b.tsStart), true) + b.col.UptFunc[1](&r.Level) + " ")
+	b.WriteString(b.col.UptFunc[0](r.Level) + dur2str(r.Time.UTC().Sub(b.tsStart), true) + b.col.UptFunc[1](r.Level) + " ")
 }
 
 func (b *Buffer) PushLevel(r slog.Record) {
-	b.WriteString(b.col.LvlFunc[0](&r.Level) + lMap[r.Level] + b.col.LvlFunc[1](&r.Level) + " ")
+	b.WriteString(b.col.LvlFunc[0](r.Level) + lMap[r.Level] + b.col.LvlFunc[1](r.Level) + " ")
 }
 
 func (b *Buffer) PushSource(r slog.Record) {
@@ -93,15 +93,15 @@ func (b *Buffer) PushSource(r slog.Record) {
 	dir, file := filepath.Split(s.File)
 	b.Printf(
 		"%s<%s:%d>%s ",
-		b.col.SrcFunc[0](&r.Level),
+		b.col.SrcFunc[0](r.Level),
 		filepath.Join(filepath.Base(dir), file),
 		s.Line,
-		b.col.SrcFunc[1](&r.Level),
+		b.col.SrcFunc[1](r.Level),
 	)
 }
 
 func (b *Buffer) PushMessage(r slog.Record) {
-	b.WriteString(b.col.MsgFunc[0](&r.Level) + r.Message + b.col.MsgFunc[1](&r.Level) + " ")
+	b.WriteString(b.col.MsgFunc[0](r.Level) + r.Message + b.col.MsgFunc[1](r.Level) + " ")
 }
 
 func (b *Buffer) PushAttr(attr slog.Attr) {
@@ -129,7 +129,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	if len(b.groups) > 0 {
 		pref = strings.Join(b.groups, ".") + "."
 	}
-	b.WriteString(fk[0](nil) + pref + key + "=" + fk[1](nil) + fv[0](nil))
+	b.WriteString(fk[0]() + pref + key + "=" + fk[1]() + fv[0]())
 	switch kind {
 	case slog.KindAny:
 		switch cv := val.Any().(type) {
@@ -162,7 +162,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	case slog.KindLogValuer:
 		fmt.Fprintf(b, "%+v", val.Any())
 	}
-	b.WriteString(fv[1](nil) + " ")
+	b.WriteString(fv[1]() + " ")
 }
 
 func dur2str(dur time.Duration, adhoc bool) string {
