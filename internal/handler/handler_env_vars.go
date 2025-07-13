@@ -11,6 +11,14 @@ import (
 	"github.com/sfmunoz/logit/internal/common"
 )
 
+func LogitTimeFormatEnv() string {
+	ret := os.Getenv("LOGIT_TIME_FORMAT")
+	if ret != "" {
+		return ret
+	}
+	return "2006-01-02T15:04:05.000Z07:00"
+}
+
 func LogitColorModeEnv() common.ColorMode {
 	switch os.Getenv("LOGIT_COLOR_MODE") {
 	case "off", "OFF":

@@ -50,7 +50,7 @@ func NewHandler() *Handler {
 		handlers:   make([]slog.Handler, 0),
 		addSource:  false,
 		level:      common.LevelInfo,
-		timeFormat: "2006-01-02T15:04:05.000Z07:00",
+		timeFormat: LogitTimeFormatEnv(),
 		timeOn:     true,
 		uptime:     true,
 		colorObj:   color.NewColor(LogitColorModeEnv()),
