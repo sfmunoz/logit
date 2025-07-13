@@ -10,6 +10,7 @@ import "log/slog"
 type ColorMode int
 type SymbolSet int
 type Tpl int
+type DurationFormat int
 
 const (
 	LevelTrace  = slog.Level(-8)  // new
@@ -35,4 +36,7 @@ const (
 	TplSource
 	TplMessage
 	TplAttrs
+
+	DurationAdhoc DurationFormat = iota
+	DurationStd
 )

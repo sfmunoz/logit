@@ -46,9 +46,10 @@ type Buffer struct {
 	tsStart   time.Time
 	groups    []string
 	symbolSet common.SymbolSet
+	durFmt    common.DurationFormat
 }
 
-func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet) *Buffer {
+func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet, durFmt common.DurationFormat) *Buffer {
 	return &Buffer{
 		arr:       make([]string, 0, 20),
 		timeFmt:   timeFmt,
@@ -56,6 +57,7 @@ func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []str
 		tsStart:   tsStart,
 		groups:    groups,
 		symbolSet: symbolSet,
+		durFmt:    durFmt,
 	}
 }
 
@@ -84,7 +86,7 @@ func (b *Buffer) PushUptime(r slog.Record) {
 	}
 	b.arr = append(
 		b.arr,
-		b.col.UptFunc[0](r.Level)+dur2str(r.Time.UTC().Sub(b.tsStart), true)+b.col.UptFunc[1](r.Level),
+		b.col.UptFunc[0](r.Level)+b.dur2str(r.Time.UTC().Sub(b.tsStart))+b.col.UptFunc[1](r.Level),
 	)
 }
 
@@ -145,7 +147,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 		case slog.KindBool:
 			return fmt.Sprintf("%t", val.Bool())
 		case slog.KindDuration:
-			return dur2str(val.Duration(), true)
+			return b.dur2str(val.Duration())
 		case slog.KindFloat64:
 			return fmt.Sprintf("%g", val.Float64())
 		case slog.KindInt64:
@@ -176,8 +178,8 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	b.arr = append(b.arr, fk[0]()+pref+key+"="+fk[1]()+fv[0]()+val2+fv[1]())
 }
 
-func dur2str(dur time.Duration, adhoc bool) string {
-	if !adhoc {
+func (b *Buffer) dur2str(dur time.Duration) string {
+	if b.durFmt == common.DurationStd {
 		return dur.String()
 	}
 	timeDay := 24 * time.Hour

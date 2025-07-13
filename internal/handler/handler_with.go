@@ -83,3 +83,9 @@ func (h *Handler) WithTpl(tpl ...common.Tpl) slog.Handler {
 	hc.tpl = tpl
 	return hc
 }
+
+func (h *Handler) WithDurationFormat(durFmt common.DurationFormat) slog.Handler {
+	hc := h.clone()
+	hc.durFmt = durFmt
+	return hc
+}

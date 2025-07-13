@@ -35,6 +35,7 @@ type Handler struct {
 	colorObj   *color.Color
 	symbolSet  common.SymbolSet
 	tpl        []common.Tpl
+	durFmt     common.DurationFormat
 }
 
 func NewHandler() *Handler {
@@ -62,6 +63,7 @@ func NewHandler() *Handler {
 			common.TplMessage,
 			common.TplAttrs,
 		},
+		durFmt: common.DurationAdhoc,
 	}
 }
 
@@ -80,6 +82,7 @@ func (h *Handler) clone() *Handler {
 		colorObj:   h.colorObj, // no clone intended
 		symbolSet:  h.symbolSet,
 		tpl:        h.tpl, // no clone intended
+		durFmt:     h.durFmt,
 	}
 }
 
@@ -91,7 +94,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
 	}
-	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet)
+	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet, h.durFmt)
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:

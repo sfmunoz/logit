@@ -29,6 +29,9 @@ const (
 	TplSource  = common.TplSource
 	TplMessage = common.TplMessage
 	TplAttrs   = common.TplAttrs
+
+	DurationAdhoc = common.DurationAdhoc
+	DurationStd   = common.DurationStd
 )
 
 // make sure Level* constants are in the right order
