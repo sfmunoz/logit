@@ -77,3 +77,9 @@ func (h *Handler) WithSymbolSet(symbolSet common.SymbolSet) *Handler {
 	c.symbolSet = symbolSet
 	return c
 }
+
+func (h *Handler) WithTpl(tpl ...common.Tpl) slog.Handler {
+	hc := h.clone()
+	hc.tpl = tpl
+	return hc
+}

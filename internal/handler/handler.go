@@ -34,6 +34,7 @@ type Handler struct {
 	uptime     bool
 	colorObj   *color.Color
 	symbolSet  common.SymbolSet
+	tpl        []common.Tpl
 }
 
 func NewHandler() *Handler {
@@ -53,6 +54,14 @@ func NewHandler() *Handler {
 		uptime:     true,
 		colorObj:   color.NewColor(common.ColorSmart),
 		symbolSet:  common.SymbolNone,
+		tpl: []common.Tpl{
+			common.TplTime,
+			common.TplUptime,
+			common.TplLevel,
+			common.TplSource,
+			common.TplMessage,
+			common.TplAttrs,
+		},
 	}
 }
 
@@ -70,6 +79,7 @@ func (h *Handler) clone() *Handler {
 		uptime:     h.uptime,
 		colorObj:   h.colorObj, // no clone intended
 		symbolSet:  h.symbolSet,
+		tpl:        h.tpl, // no clone intended
 	}
 }
 
@@ -83,24 +93,34 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet)
 	defer buf.Release()
-	if h.timeOn {
-		buf.PushTime(r)
+	for _, tpl := range h.tpl {
+		switch tpl {
+		case common.TplTime:
+			if h.timeOn {
+				buf.PushTime(r)
+			}
+		case common.TplUptime:
+			if h.uptime {
+				buf.PushUptime(r)
+			}
+		case common.TplLevel:
+			buf.PushLevel(r)
+		case common.TplSource:
+			if h.addSource {
+				buf.PushSource(r)
+			}
+		case common.TplMessage:
+			buf.PushMessage(r)
+		case common.TplAttrs:
+			for _, attr := range h.attrs {
+				buf.PushAttr(attr)
+			}
+			r.Attrs(func(attr slog.Attr) bool {
+				buf.PushAttr(attr)
+				return true
+			})
+		}
 	}
-	if h.uptime {
-		buf.PushUptime(r)
-	}
-	buf.PushLevel(r)
-	if h.addSource {
-		buf.PushSource(r)
-	}
-	buf.PushMessage(r)
-	for _, attr := range h.attrs {
-		buf.PushAttr(attr)
-	}
-	r.Attrs(func(attr slog.Attr) bool {
-		buf.PushAttr(attr)
-		return true
-	})
 	if buf.Len() == 0 {
 		return nil
 	}

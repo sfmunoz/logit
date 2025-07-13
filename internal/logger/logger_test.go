@@ -36,7 +36,7 @@ func inner(_ *testing.T, symbolSet common.SymbolSet) {
 	slog.Error("DB connection lost", "err", "connection reset", "failure", errors.New("network off"), "db", "myapp")
 	log.Print("log.Print() message")
 	l.Trace("trace", "the-key", "the-val")
-	l.Notice("notice", "the-key", "the-val")
+	l.WithTpl(common.TplAttrs, common.TplMessage, common.TplLevel, common.TplUptime).Notice("notice (ad hoc template)", "the-key", "the-val")
 	//l.Fatal("fatal", "key", "val")
 	l.WithGroup("s").LogAttrs(context.Background(), common.LevelNotice, "(1) logger.WithGroup(\"s\")", slog.Int("a", 1), slog.Int("b", 2))
 	l.LogAttrs(context.Background(), common.LevelNotice, "(2) logger.WithGroup(\"s\")", slog.Group("s", slog.Int("a", 1), slog.Int("b", 2)))

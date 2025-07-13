@@ -9,6 +9,7 @@ import "log/slog"
 
 type ColorMode int
 type SymbolSet int
+type Tpl int
 
 const (
 	LevelTrace  = slog.Level(-8)  // new
@@ -27,4 +28,11 @@ const (
 	SymbolNone SymbolSet = iota
 	SymbolUnicodeUp
 	SymbolUnicodeDown
+
+	TplTime Tpl = iota
+	TplUptime
+	TplLevel
+	TplSource
+	TplMessage
+	TplAttrs
 )

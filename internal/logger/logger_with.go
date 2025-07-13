@@ -89,3 +89,9 @@ func (l *Logger) WithSymbolSet(symbolSet common.SymbolSet) *Logger {
 	}
 	return l
 }
+func (l *Logger) WithTpl(tpl ...common.Tpl) *Logger {
+	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
+		return NewLogger(h.WithTpl(tpl...))
+	}
+	return l
+}

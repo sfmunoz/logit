@@ -22,6 +22,13 @@ const (
 	SymbolNone        = common.SymbolNone
 	SymbolUnicodeUp   = common.SymbolUnicodeUp
 	SymbolUnicodeDown = common.SymbolUnicodeDown
+
+	TplTime    = common.TplTime
+	TplUptime  = common.TplUptime
+	TplLevel   = common.TplLevel
+	TplSource  = common.TplSource
+	TplMessage = common.TplMessage
+	TplAttrs   = common.TplAttrs
 )
 
 // make sure Level* constants are in the right order
