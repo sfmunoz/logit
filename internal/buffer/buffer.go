@@ -22,20 +22,31 @@ import (
 
 type Buffer struct {
 	*bytes.Buffer
-	timeFmt string
-	col     *color.Color
-	tsStart time.Time
-	groups  []string
+	timeFmt   string
+	col       *color.Color
+	tsStart   time.Time
+	groups    []string
+	symbolSet common.SymbolSet
 }
 
-var lMap = map[slog.Level]string{
-	common.LevelTrace:  "[T]",
-	common.LevelDebug:  "[D]",
-	common.LevelInfo:   "[I]",
-	common.LevelNotice: "[N]",
-	common.LevelWarn:   "[W]",
-	common.LevelError:  "[E]",
-	common.LevelFatal:  "[F]",
+const (
+	lt = common.LevelTrace
+	ld = common.LevelDebug
+	li = common.LevelInfo
+	ln = common.LevelNotice
+	lw = common.LevelWarn
+	le = common.LevelError
+	lf = common.LevelFatal
+
+	sn = common.SymbolNone
+	su = common.SymbolUnicodeUp
+	sd = common.SymbolUnicodeDown
+)
+
+var lMap = map[common.SymbolSet]map[slog.Level]string{
+	sn: {lt: "[T]", ld: "[D]", li: "[I]", ln: "[N]", lw: "[W]", le: "[E]", lf: "[F]"},
+	su: {lt: "Ⓣ", ld: "Ⓓ", li: "Ⓘ", ln: "Ⓝ", lw: "Ⓦ", le: "Ⓔ", lf: "Ⓕ"},
+	sd: {lt: "ⓣ", ld: "ⓓ", li: "ⓓ", ln: "ⓝ", lw: "ⓦ", le: "ⓔ", lf: "ⓕ"},
 }
 
 var pool = sync.Pool{
@@ -46,12 +57,13 @@ var pool = sync.Pool{
 	},
 }
 
-func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string) *Buffer {
+func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet) *Buffer {
 	b := pool.Get().(*Buffer)
 	b.timeFmt = timeFmt
 	b.col = col
 	b.tsStart = tsStart
 	b.groups = groups
+	b.symbolSet = symbolSet
 	return b
 }
 
@@ -82,7 +94,7 @@ func (b *Buffer) PushUptime(r slog.Record) {
 }
 
 func (b *Buffer) PushLevel(r slog.Record) {
-	b.WriteString(b.col.LvlFunc[0](r.Level) + lMap[r.Level] + b.col.LvlFunc[1](r.Level) + " ")
+	b.WriteString(b.col.LvlFunc[0](r.Level) + lMap[b.symbolSet][r.Level] + b.col.LvlFunc[1](r.Level) + " ")
 }
 
 func (b *Buffer) PushSource(r slog.Record) {

@@ -5,11 +5,10 @@
 
 package common
 
-import (
-	"log/slog"
-)
+import "log/slog"
 
 type ColorMode int
+type SymbolSet int
 
 const (
 	LevelTrace  = slog.Level(-8)  // new
@@ -24,4 +23,8 @@ const (
 	ColorSmart
 	ColorMedium
 	ColorFull
+
+	SymbolNone SymbolSet = iota
+	SymbolUnicodeUp
+	SymbolUnicodeDown
 )

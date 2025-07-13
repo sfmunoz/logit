@@ -82,3 +82,10 @@ func (l *Logger) WithHandlers(handlers []slog.Handler) *Logger {
 	}
 	return l
 }
+
+func (l *Logger) WithSymbolSet(symbolSet common.SymbolSet) *Logger {
+	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
+		return NewLogger(h.WithSymbolSet(symbolSet))
+	}
+	return l
+}

@@ -18,6 +18,10 @@ const (
 	LevelWarn   = common.LevelWarn
 	LevelError  = common.LevelError
 	LevelFatal  = common.LevelFatal
+
+	SymbolNone        = common.SymbolNone
+	SymbolUnicodeUp   = common.SymbolUnicodeUp
+	SymbolUnicodeDown = common.SymbolUnicodeDown
 )
 
 // make sure Level* constants are in the right order

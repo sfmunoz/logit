@@ -33,6 +33,7 @@ type Handler struct {
 	timeOn     bool
 	uptime     bool
 	colorObj   *color.Color
+	symbolSet  common.SymbolSet
 }
 
 func NewHandler() *Handler {
@@ -51,6 +52,7 @@ func NewHandler() *Handler {
 		timeOn:     true,
 		uptime:     true,
 		colorObj:   color.NewColor(common.ColorSmart),
+		symbolSet:  common.SymbolNone,
 	}
 }
 
@@ -67,6 +69,7 @@ func (h *Handler) clone() *Handler {
 		timeFormat: h.timeFormat,
 		uptime:     h.uptime,
 		colorObj:   h.colorObj, // no clone intended
+		symbolSet:  h.symbolSet,
 	}
 }
 
@@ -78,7 +81,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
 	}
-	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups)
+	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet)
 	defer buf.Release()
 	if h.timeOn {
 		buf.PushTime(r)

@@ -71,3 +71,9 @@ func (h *Handler) WithHandlers(handlers []slog.Handler) *Handler {
 	c.handlers = handlers
 	return c
 }
+
+func (h *Handler) WithSymbolSet(symbolSet common.SymbolSet) *Handler {
+	c := h.clone()
+	c.symbolSet = symbolSet
+	return c
+}

@@ -16,7 +16,8 @@ import (
 func TestNewLogit(t *testing.T) {
 	log := logit.Logit().
 		WithLevel(logit.LevelNotice).
-		With("test", "NewLogit")
+		With("test", "NewLogit").
+		WithSymbolSet(logit.SymbolUnicodeDown)
 	log.Trace("trace-msg")
 	log.Debug("debug-msg")
 	log.Info("info-msg")
