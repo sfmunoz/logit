@@ -129,6 +129,40 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	}
 	key := attr.Key
 	val := attr.Value
+	val2 := func() string {
+		switch kind {
+		case slog.KindAny:
+			switch cv := val.Any().(type) {
+			case encoding.TextMarshaler:
+				data, err := cv.MarshalText()
+				if err != nil {
+					return fmt.Sprintf("!cv.MarshalText() error: %s", err)
+				}
+				return string(data)
+			default:
+				return fmt.Sprintf("%+v", val.Any())
+			}
+		case slog.KindBool:
+			return fmt.Sprintf("%t", val.Bool())
+		case slog.KindDuration:
+			return dur2str(val.Duration(), true)
+		case slog.KindFloat64:
+			return fmt.Sprintf("%g", val.Float64())
+		case slog.KindInt64:
+			return fmt.Sprintf("%d", val.Int64())
+		case slog.KindString:
+			return val.String()
+		case slog.KindTime:
+			return val.Time().String()
+		case slog.KindUint64:
+			return fmt.Sprintf("%d", val.Uint64())
+		case slog.KindGroup:
+			return "!error: slog.KindGroup already handled"
+		case slog.KindLogValuer:
+			return fmt.Sprintf("%+v", val.Any())
+		}
+		return ""
+	}()
 	fk := b.col.KeyFunc
 	fv := b.col.ValFunc
 	if _, ok := val.Any().(error); ok {
@@ -139,41 +173,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	if len(b.groups) > 0 {
 		pref = strings.Join(b.groups, ".") + "."
 	}
-	tmp := fk[0]() + pref + key + "=" + fk[1]() + fv[0]()
-	switch kind {
-	case slog.KindAny:
-		switch cv := val.Any().(type) {
-		case encoding.TextMarshaler:
-			data, err := cv.MarshalText()
-			if err != nil {
-				tmp += fmt.Sprintf("!cv.MarshalText() error: %s", err)
-				break
-			}
-			tmp += string(data)
-		default:
-			tmp += fmt.Sprintf("%+v", val.Any())
-		}
-	case slog.KindBool:
-		tmp += fmt.Sprintf("%t", val.Bool())
-	case slog.KindDuration:
-		tmp += dur2str(val.Duration(), true)
-	case slog.KindFloat64:
-		tmp += fmt.Sprintf("%g", val.Float64())
-	case slog.KindInt64:
-		tmp += fmt.Sprintf("%d", val.Int64())
-	case slog.KindString:
-		tmp += val.String()
-	case slog.KindTime:
-		tmp += val.Time().String()
-	case slog.KindUint64:
-		tmp += fmt.Sprintf("%d", val.Uint64())
-	case slog.KindGroup:
-		tmp += "!error: slog.KindGroup already handled"
-	case slog.KindLogValuer:
-		tmp += fmt.Sprintf("%+v", val.Any())
-	}
-	tmp += fv[1]()
-	b.arr = append(b.arr, tmp)
+	b.arr = append(b.arr, fk[0]()+pref+key+"="+fk[1]()+fv[0]()+val2+fv[1]())
 }
 
 func dur2str(dur time.Duration, adhoc bool) string {
