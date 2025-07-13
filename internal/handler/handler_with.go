@@ -47,6 +47,12 @@ func (h *Handler) WithTime(t bool) *Handler {
 	return c
 }
 
+func (h *Handler) WithUptimeFormat(uptimeFmt common.UptimeFormat) slog.Handler {
+	hc := h.clone()
+	hc.uptimeFmt = uptimeFmt
+	return hc
+}
+
 func (h *Handler) WithUptime(u bool) *Handler {
 	c := h.clone()
 	c.uptime = u
@@ -81,11 +87,5 @@ func (h *Handler) WithSymbolSet(symbolSet common.SymbolSet) *Handler {
 func (h *Handler) WithTpl(tpl ...common.Tpl) slog.Handler {
 	hc := h.clone()
 	hc.tpl = tpl
-	return hc
-}
-
-func (h *Handler) WithDurationFormat(durFmt common.DurationFormat) slog.Handler {
-	hc := h.clone()
-	hc.durFmt = durFmt
 	return hc
 }

@@ -30,8 +30,8 @@ const (
 	TplMessage = common.TplMessage
 	TplAttrs   = common.TplAttrs
 
-	DurationAdhoc = common.DurationAdhoc
-	DurationStd   = common.DurationStd
+	UptimeAdhoc = common.UptimeAdhoc
+	UptimeStd   = common.UptimeStd
 )
 
 // make sure Level* constants are in the right order

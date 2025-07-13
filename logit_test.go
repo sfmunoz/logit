@@ -18,7 +18,7 @@ func TestNewLogit(t *testing.T) {
 		WithLevel(logit.LevelNotice).
 		With("test", "NewLogit").
 		WithSymbolSet(logit.SymbolUnicodeDown).
-		WithDurationFormat(logit.DurationStd)
+		WithUptimeFormat(logit.UptimeStd)
 
 	log.Trace("trace-msg")
 	log.Debug("debug-msg")

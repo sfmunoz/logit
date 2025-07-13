@@ -55,6 +55,13 @@ func (l *Logger) WithTime(t bool) *Logger {
 	return l
 }
 
+func (l *Logger) WithUptimeFormat(uptimeFmt common.UptimeFormat) *Logger {
+	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
+		return NewLogger(h.WithUptimeFormat(uptimeFmt))
+	}
+	return l
+}
+
 func (l *Logger) WithUptime(u bool) *Logger {
 	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
 		return NewLogger(h.WithUptime(u))
@@ -93,13 +100,6 @@ func (l *Logger) WithSymbolSet(symbolSet common.SymbolSet) *Logger {
 func (l *Logger) WithTpl(tpl ...common.Tpl) *Logger {
 	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
 		return NewLogger(h.WithTpl(tpl...))
-	}
-	return l
-}
-
-func (l *Logger) WithDurationFormat(durFmt common.DurationFormat) *Logger {
-	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
-		return NewLogger(h.WithDurationFormat(durFmt))
 	}
 	return l
 }
