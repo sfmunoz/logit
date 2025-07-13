@@ -53,7 +53,7 @@ func NewHandler() *Handler {
 		timeFormat: "2006-01-02T15:04:05.000Z07:00",
 		timeOn:     true,
 		uptime:     true,
-		colorObj:   color.NewColor(common.ColorSmart),
+		colorObj:   color.NewColor(LogitColorModeEnv()),
 		symbolSet:  common.SymbolNone,
 		tpl: []common.Tpl{
 			common.TplTime,
