@@ -97,9 +97,9 @@ For a guide to writing a custom handler, see https://golang.org/s/slog-handler-g
 (...)
 ```
 
-The guide to read is this one:
-
-> [https://github.com/golang/example/blob/master/slog-handler-guide/README.md](https://github.com/golang/example/blob/master/slog-handler-guide/README.md)
+> [!TIP]
+> So the must reading guide is the following one:\
+> [https://golang.org/s/slog-handler-guide](https://golang.org/s/slog-handler-guide) → [https://github.com/golang/example/blob/master/slog-handler-guide/README.md](https://github.com/golang/example/blob/master/slog-handler-guide/README.md)
 
 There are 4 versions of the indenthandler example in the README.md:
 
