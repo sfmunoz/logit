@@ -27,11 +27,8 @@ type Handler struct {
 	tsStart  time.Time
 	handlers []slog.Handler
 
-	addSource  bool
 	level      slog.Leveler
 	timeFormat string
-	timeOn     bool
-	uptime     bool
 	colorObj   *color.Color
 	symbolSet  common.SymbolSet
 	tpl        []common.Tpl
@@ -48,11 +45,8 @@ func NewHandler() *Handler {
 		out:        os.Stderr,
 		tsStart:    time.Now().UTC(),
 		handlers:   make([]slog.Handler, 0),
-		addSource:  false,
 		level:      common.LevelInfo,
 		timeFormat: "2006-01-02T15:04:05.000Z07:00",
-		timeOn:     true,
-		uptime:     true,
 		colorObj:   color.NewColor(common.ColorSmart),
 		symbolSet:  common.SymbolNone,
 		tpl: []common.Tpl{
@@ -74,11 +68,8 @@ func (h *Handler) clone() *Handler {
 		out:        h.out,
 		tsStart:    h.tsStart,
 		handlers:   h.handlers, // no clone intended
-		addSource:  h.addSource,
 		level:      h.level,
-		timeOn:     h.timeOn,
 		timeFormat: h.timeFormat,
-		uptime:     h.uptime,
 		colorObj:   h.colorObj, // no clone intended
 		symbolSet:  h.symbolSet,
 		tpl:        h.tpl, // no clone intended
@@ -98,19 +89,13 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:
-			if h.timeOn {
-				buf.PushTime(r)
-			}
+			buf.PushTime(r)
 		case common.TplUptime:
-			if h.uptime {
-				buf.PushUptime(r)
-			}
+			buf.PushUptime(r)
 		case common.TplLevel:
 			buf.PushLevel(r)
 		case common.TplSource:
-			if h.addSource {
-				buf.PushSource(r)
-			}
+			buf.PushSource(r)
 		case common.TplMessage:
 			buf.PushMessage(r)
 		case common.TplAttrs:

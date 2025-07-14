@@ -19,12 +19,6 @@ func (h *Handler) WithWriter(out io.Writer) *Handler {
 	return c
 }
 
-func (h *Handler) WithSource(s bool) *Handler {
-	c := h.clone()
-	c.addSource = s
-	return c
-}
-
 func (h *Handler) WithLevel(level slog.Level) *Handler {
 	return h.WithLeveler(level)
 }
@@ -41,22 +35,10 @@ func (h *Handler) WithTimeFormat(t string) *Handler {
 	return c
 }
 
-func (h *Handler) WithTime(t bool) *Handler {
-	c := h.clone()
-	c.timeOn = t
-	return c
-}
-
 func (h *Handler) WithUptimeFormat(uptimeFmt common.UptimeFormat) slog.Handler {
 	hc := h.clone()
 	hc.uptimeFmt = uptimeFmt
 	return hc
-}
-
-func (h *Handler) WithUptime(u bool) *Handler {
-	c := h.clone()
-	c.uptime = u
-	return c
 }
 
 func (h *Handler) WithColorMode(cm common.ColorMode) *Handler {
