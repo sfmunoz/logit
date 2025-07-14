@@ -8,6 +8,7 @@ package handler
 import (
 	"io"
 	"log/slog"
+	"slices"
 
 	"github.com/sfmunoz/logit/internal/color"
 	"github.com/sfmunoz/logit/internal/common"
@@ -67,7 +68,18 @@ func (h *Handler) WithSymbolSet(symbolSet common.SymbolSet) *Handler {
 }
 
 func (h *Handler) WithTpl(tpl ...common.Tpl) slog.Handler {
+	tpl2 := make([]common.Tpl, 0, len(tpl))
+	for _, t := range tpl {
+		if !slices.Contains(tpl2, t) {
+			tpl2 = append(tpl2, t)
+		}
+	}
+	for _, t := range []common.Tpl{common.TplMessage, common.TplAttrs} {
+		if !slices.Contains(tpl2, t) {
+			tpl2 = append(tpl2, t)
+		}
+	}
 	hc := h.clone()
-	hc.tpl = tpl
+	hc.tpl = tpl2
 	return hc
 }
