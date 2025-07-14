@@ -63,7 +63,7 @@ func main() {
 ```
 Run it using `go run main.go`:
 
-![20250712_173105.png](https://github.com/sfmunoz/logit/blob/assets/20250712_173105.png)
+![20250714_151107.png](https://github.com/sfmunoz/logit/blob/assets/20250714_151107.png)
 
 Detailed configuration:
 ```go
@@ -79,11 +79,9 @@ import (
 var log = logit.Logit().
 	With("app", "my-app").
 	WithWriter(os.Stderr).
-	WithSource(true).
+	WithTpl(logit.TplTime, logit.TplUptime, logit.TplLevel, logit.TplSource, logit.TplMessage, logit.TplAttrs).
 	WithLevel(slog.LevelDebug).
 	WithTimeFormat("2006-01-02T15:04:05.000Z07:00").
-	WithTime(true).
-	WithUptime(true).
 	WithColor(true)
 
 func main() {
@@ -92,7 +90,7 @@ func main() {
 ```
 Run it too with `go run main.go`:
 
-![20250712_173226.png](https://github.com/sfmunoz/logit/blob/assets/20250712_173226.png)
+![20250714_151226.png](https://github.com/sfmunoz/logit/blob/assets/20250714_151226.png)
 
 ## References
 

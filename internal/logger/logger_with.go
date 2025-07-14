@@ -20,13 +20,6 @@ func (l *Logger) WithWriter(w io.Writer) *Logger {
 	return l
 }
 
-func (l *Logger) WithSource(s bool) *Logger {
-	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
-		return NewLogger(h.WithSource(s))
-	}
-	return l
-}
-
 func (l *Logger) WithLevel(level slog.Level) *Logger {
 	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
 		return NewLogger(h.WithLevel(level))
@@ -48,23 +41,9 @@ func (l *Logger) WithTimeFormat(t string) *Logger {
 	return l
 }
 
-func (l *Logger) WithTime(t bool) *Logger {
-	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
-		return NewLogger(h.WithTime(t))
-	}
-	return l
-}
-
 func (l *Logger) WithUptimeFormat(uptimeFmt common.UptimeFormat) *Logger {
 	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
 		return NewLogger(h.WithUptimeFormat(uptimeFmt))
-	}
-	return l
-}
-
-func (l *Logger) WithUptime(u bool) *Logger {
-	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
-		return NewLogger(h.WithUptime(u))
 	}
 	return l
 }

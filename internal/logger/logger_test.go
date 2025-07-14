@@ -24,8 +24,6 @@ func inner(_ *testing.T, symbolSet common.SymbolSet) {
 		WithGroup("g1").
 		WithGroup("g2").
 		WithLevel(common.LevelTrace).
-		WithTime(false).
-		WithSource(true).
 		WithSymbolSet(symbolSet)
 	slog.SetDefault(l.Logger)
 	l.Info("symbols", "SymbolNone", common.SymbolNone, "SymbolUnicodeUp", common.SymbolUnicodeUp, "SymbolUnicodeDown", common.SymbolUnicodeDown, "Current", symbolSet)
