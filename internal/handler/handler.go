@@ -56,7 +56,7 @@ func NewHandler() *Handler {
 			common.TplMessage,
 			common.TplAttrs,
 		},
-		uptimeFmt: common.UptimeAdhoc,
+		uptimeFmt: LogitUptimeFormatEnv(),
 	}
 }
 

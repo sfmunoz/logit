@@ -51,6 +51,16 @@ func LogitTimeFormatEnv() string {
 	return "2006-01-02T15:04:05.000Z07:00"
 }
 
+func LogitUptimeFormatEnv() common.UptimeFormat {
+	switch os.Getenv("LOGIT_UPTIME_FORMAT") {
+	case "std", "STD":
+		return common.UptimeStd
+	case "adhoc", "ADHOC":
+		return common.UptimeAdhoc
+	}
+	return common.UptimeAdhoc // default
+}
+
 func LogitColorModeEnv() common.ColorMode {
 	switch os.Getenv("LOGIT_COLOR_MODE") {
 	case "off", "OFF":
