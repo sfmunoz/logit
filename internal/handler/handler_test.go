@@ -31,7 +31,6 @@ func TestRaw(t *testing.T) {
 func TestOpts(t *testing.T) {
 	h := handler.NewHandler().
 		WithWriter(os.Stderr).
-		WithSource(true).
 		WithLevel(slog.LevelDebug)
 	logger := slog.New(h)
 	slog.SetDefault(logger)
@@ -50,8 +49,7 @@ func TestFanout(t *testing.T) {
 	h2 := slog.NewJSONHandler(os.Stderr, opts2)
 	h := handler.NewHandler().
 		WithLeveler(lv).
-		WithHandlers([]slog.Handler{h1, h2}).
-		WithTime(false)
+		WithHandlers([]slog.Handler{h1, h2})
 	logger := slog.New(h)
 	slog.SetDefault(logger)
 	slog.Info("Message repeated", "times", 3)
