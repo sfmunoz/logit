@@ -7,6 +7,12 @@ logit: Simple Golang logging/slog library
 - [References](#references)
 - [Others](#others)
 
+> [!CAUTION]
+> Even though it's ready to be used the repository is evolving at a fast pace these days so it's advisable to stick to a fixed version to prevent compilation from breaking because of API changes.\
+> E.g.:
+> - OK → `go get -u github.com/sfmunoz/logit@v0.2.0`
+> - KO → `go get -u github.com/sfmunoz/logit`
+
 ## Features
 
 - No dependencies
