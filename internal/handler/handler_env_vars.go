@@ -6,11 +6,22 @@
 package handler
 
 import (
+	"io"
 	"log/slog"
 	"os"
 
 	"github.com/sfmunoz/logit/internal/common"
 )
+
+func LogitWriterEnv() io.Writer {
+	switch os.Getenv("LOGIT_WRITER") {
+	case "stdout", "STDOUT":
+		return os.Stdout
+	case "stderr", "STDERR":
+		return os.Stderr
+	}
+	return os.Stderr
+}
 
 func LogitLevelEnv() slog.Level {
 	switch os.Getenv("LOGIT_LEVEL") {
