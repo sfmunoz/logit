@@ -49,7 +49,7 @@ func NewHandler() *Handler {
 		tsStart:    time.Now().UTC(),
 		handlers:   make([]slog.Handler, 0),
 		addSource:  false,
-		level:      common.LevelInfo,
+		level:      LogitLevelEnv(),
 		timeFormat: LogitTimeFormatEnv(),
 		timeOn:     true,
 		uptime:     true,
