@@ -53,7 +53,7 @@ func NewHandler() *Handler {
 			common.TplTime,
 			common.TplUptime,
 			common.TplLevel,
-			common.TplSource,
+			//common.TplSource,
 			common.TplMessage,
 			common.TplAttrs,
 		},
