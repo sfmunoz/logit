@@ -9,7 +9,6 @@ import (
 	"context"
 	"io"
 	"log/slog"
-	"os"
 	"sync"
 	"time"
 
@@ -42,13 +41,13 @@ func NewHandler() *Handler {
 	return &Handler{
 		attrs:      make([]slog.Attr, 0),
 		groups:     make([]string, 0),
-		out:        os.Stderr,
+		out:        LogitWriterEnv(),
 		tsStart:    time.Now().UTC(),
 		handlers:   make([]slog.Handler, 0),
-		level:      common.LevelInfo,
-		timeFormat: "2006-01-02T15:04:05.000Z07:00",
-		colorObj:   color.NewColor(common.ColorSmart),
-		symbolSet:  common.SymbolNone,
+		level:      LogitLevelEnv(),
+		timeFormat: LogitTimeFormatEnv(),
+		colorObj:   color.NewColor(LogitColorModeEnv()),
+		symbolSet:  LogitSymbolSetEnv(),
 		tpl: []common.Tpl{
 			common.TplTime,
 			common.TplUptime,
@@ -57,7 +56,7 @@ func NewHandler() *Handler {
 			common.TplMessage,
 			common.TplAttrs,
 		},
-		uptimeFmt: common.UptimeAdhoc,
+		uptimeFmt: LogitUptimeFormatEnv(),
 	}
 }
 
