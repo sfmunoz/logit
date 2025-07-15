@@ -47,7 +47,7 @@ func NewHandler() *Handler {
 		level:      LogitLevelEnv(),
 		timeFormat: LogitTimeFormatEnv(),
 		colorObj:   color.NewColor(LogitColorModeEnv()),
-		symbolSet:  common.SymbolNone,
+		symbolSet:  LogitSymbolSetEnv(),
 		tpl: []common.Tpl{
 			common.TplTime,
 			common.TplUptime,

@@ -74,3 +74,15 @@ func LogitColorModeEnv() common.ColorMode {
 	}
 	return common.ColorSmart // default
 }
+
+func LogitSymbolSetEnv() common.SymbolSet {
+	switch os.Getenv("LOGIT_SYMBOL_SET") {
+	case "none", "NONE":
+		return common.SymbolNone
+	case "unicode_up", "UNICODE_UP":
+		return common.SymbolUnicodeUp
+	case "unicode_down", "UNICODE_DOWN":
+		return common.SymbolUnicodeDown
+	}
+	return common.SymbolNone // default
+}
