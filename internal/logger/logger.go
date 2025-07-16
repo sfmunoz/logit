@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime"
+	"time"
 
 	"github.com/sfmunoz/logit/internal/common"
 	"github.com/sfmunoz/logit/internal/handler"
@@ -38,37 +40,59 @@ func (l *Logger) WithGroup(name string) *Logger {
 }
 
 func (l *Logger) Trace(msg string, args ...any) {
-	l.Log(context.Background(), common.LevelTrace, msg, args...)
+	l.log(context.Background(), common.LevelTrace, msg, args...)
 }
 
 func (l *Logger) TraceContext(ctx context.Context, msg string, args ...any) {
-	l.Log(ctx, common.LevelTrace, msg, args...)
+	l.log(ctx, common.LevelTrace, msg, args...)
 }
 
 func (l *Logger) Notice(msg string, args ...any) {
-	l.Log(context.Background(), common.LevelNotice, msg, args...)
+	l.log(context.Background(), common.LevelNotice, msg, args...)
 }
 
 func (l *Logger) NoticeContext(ctx context.Context, msg string, args ...any) {
-	l.Log(ctx, common.LevelNotice, msg, args...)
+	l.log(ctx, common.LevelNotice, msg, args...)
 }
 
 func (l *Logger) Fatal(msg string, args ...any) {
-	l.Log(context.Background(), common.LevelFatal, msg, args...)
+	l.log(context.Background(), common.LevelFatal, msg, args...)
 	os.Exit(1)
 }
 
 func (l *Logger) FatalContext(ctx context.Context, msg string, args ...any) {
-	l.Log(ctx, common.LevelFatal, msg, args...)
+	l.log(ctx, common.LevelFatal, msg, args...)
 	os.Exit(1)
 }
 
 func (l *Logger) Panic(msg string, args ...any) {
-	l.Log(context.Background(), common.LevelFatal, msg, args...)
+	l.log(context.Background(), common.LevelFatal, msg, args...)
 	panic(fmt.Sprint(msg, " ", args))
 }
 
 func (l *Logger) PanicContext(ctx context.Context, msg string, args ...any) {
-	l.Log(ctx, common.LevelFatal, msg, args...)
+	l.log(ctx, common.LevelFatal, msg, args...)
 	panic(fmt.Sprint(msg, " ", args))
+}
+
+// log() method copied and adapted from <go1.24.5.linux-amd64>/src/log/slog/logger.go
+// which has the following license
+//
+// Copyright 2022 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+func (l *Logger) log(ctx context.Context, level slog.Level, msg string, args ...any) {
+	if !l.Enabled(ctx, level) {
+		return
+	}
+	var pc uintptr
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:])
+	pc = pcs[0]
+	r := slog.NewRecord(time.Now(), level, msg, pc)
+	r.Add(args...)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = l.Handler().Handle(ctx, r)
 }
