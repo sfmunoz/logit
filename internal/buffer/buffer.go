@@ -123,6 +123,12 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	if attr.Equal(slog.Attr{}) || attr.Key == "" {
 		return
 	}
+	if b.replaceAttr != nil {
+		// naive support: groups are ignored
+		if attrNew := b.replaceAttr(nil, attr); !attrNew.Equal(slog.Attr{}) {
+			attr = attrNew
+		}
+	}
 	kind := attr.Value.Kind()
 	if kind == slog.KindGroup {
 		for _, a := range attr.Value.Group() {
