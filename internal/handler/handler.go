@@ -87,7 +87,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
 	}
-	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet, h.uptimeFmt)
+	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet, h.uptimeFmt, h.replaceAttr)
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:

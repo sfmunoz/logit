@@ -40,24 +40,26 @@ var lMap = map[common.SymbolSet]map[slog.Level]string{
 }
 
 type Buffer struct {
-	arr       []string
-	timeFmt   string
-	col       *color.Color
-	tsStart   time.Time
-	groups    []string
-	symbolSet common.SymbolSet
-	uptimeFmt common.UptimeFormat
+	arr         []string
+	timeFmt     string
+	col         *color.Color
+	tsStart     time.Time
+	groups      []string
+	symbolSet   common.SymbolSet
+	uptimeFmt   common.UptimeFormat
+	replaceAttr common.ReplaceAttr
 }
 
-func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet, uptimeFmt common.UptimeFormat) *Buffer {
+func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet, uptimeFmt common.UptimeFormat, replaceAttr common.ReplaceAttr) *Buffer {
 	return &Buffer{
-		arr:       make([]string, 0, 20),
-		timeFmt:   timeFmt,
-		col:       col,
-		tsStart:   tsStart,
-		groups:    groups,
-		symbolSet: symbolSet,
-		uptimeFmt: uptimeFmt,
+		arr:         make([]string, 0, 20),
+		timeFmt:     timeFmt,
+		col:         col,
+		tsStart:     tsStart,
+		groups:      groups,
+		symbolSet:   symbolSet,
+		uptimeFmt:   uptimeFmt,
+		replaceAttr: replaceAttr,
 	}
 }
 
