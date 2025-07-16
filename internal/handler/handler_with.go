@@ -83,3 +83,9 @@ func (h *Handler) WithTpl(tpl ...common.Tpl) slog.Handler {
 	hc.tpl = tpl2
 	return hc
 }
+
+func (h *Handler) WithReplaceAttr(replaceAttr common.ReplaceAttr) *Handler {
+	c := h.clone()
+	c.replaceAttr = replaceAttr
+	return c
+}

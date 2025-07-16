@@ -11,6 +11,7 @@ type ColorMode int
 type SymbolSet int
 type Tpl int
 type UptimeFormat int
+type ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 
 const (
 	LevelTrace  = slog.Level(-8)  // new

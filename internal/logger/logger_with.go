@@ -82,3 +82,10 @@ func (l *Logger) WithTpl(tpl ...common.Tpl) *Logger {
 	}
 	return l
 }
+
+func (l *Logger) WithReplaceAttr(replaceAttr common.ReplaceAttr) *Logger {
+	if h, ok := l.Logger.Handler().(*handler.Handler); ok {
+		return NewLogger(h.WithReplaceAttr(replaceAttr))
+	}
+	return l
+}

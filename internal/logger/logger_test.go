@@ -18,13 +18,21 @@ import (
 	"github.com/sfmunoz/logit/internal/logger"
 )
 
+func replaceAttr(_ []string, a slog.Attr) slog.Attr {
+	if a.Key == "the-key" {
+		return slog.String("the-key", fmt.Sprintf("'%s'=>EXTENDED BY 'replaceAttr()'", a.Value))
+	}
+	return slog.Attr{}
+}
+
 func inner(_ *testing.T, symbolSet common.SymbolSet) {
 	l := logger.NewLogger(nil).
 		With("a1", "v1").
 		WithGroup("g1").
 		WithGroup("g2").
 		WithLevel(common.LevelTrace).
-		WithSymbolSet(symbolSet)
+		WithSymbolSet(symbolSet).
+		WithReplaceAttr(replaceAttr)
 	slog.SetDefault(l.Logger)
 	l.Info("symbols", "SymbolNone", common.SymbolNone, "SymbolUnicodeUp", common.SymbolUnicodeUp, "SymbolUnicodeDown", common.SymbolUnicodeDown, "Current", symbolSet)
 	l.Info("logger.NewLogger()", "type", fmt.Sprintf("%T", l))

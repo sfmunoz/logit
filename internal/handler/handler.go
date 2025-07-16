@@ -26,12 +26,13 @@ type Handler struct {
 	tsStart  time.Time
 	handlers []slog.Handler
 
-	level      slog.Leveler
-	timeFormat string
-	colorObj   *color.Color
-	symbolSet  common.SymbolSet
-	tpl        []common.Tpl
-	uptimeFmt  common.UptimeFormat
+	level       slog.Leveler
+	timeFormat  string
+	colorObj    *color.Color
+	symbolSet   common.SymbolSet
+	tpl         []common.Tpl
+	uptimeFmt   common.UptimeFormat
+	replaceAttr common.ReplaceAttr
 }
 
 func NewHandler() *Handler {
@@ -56,23 +57,25 @@ func NewHandler() *Handler {
 			common.TplMessage,
 			common.TplAttrs,
 		},
-		uptimeFmt: LogitUptimeFormatEnv(),
+		uptimeFmt:   LogitUptimeFormatEnv(),
+		replaceAttr: nil,
 	}
 }
 
 func (h *Handler) clone() *Handler {
 	return &Handler{
-		attrs:      h.attrs,  // no clone intended
-		groups:     h.groups, // no clone intended
-		out:        h.out,
-		tsStart:    h.tsStart,
-		handlers:   h.handlers, // no clone intended
-		level:      h.level,
-		timeFormat: h.timeFormat,
-		colorObj:   h.colorObj, // no clone intended
-		symbolSet:  h.symbolSet,
-		tpl:        h.tpl, // no clone intended
-		uptimeFmt:  h.uptimeFmt,
+		attrs:       h.attrs,  // no clone intended
+		groups:      h.groups, // no clone intended
+		out:         h.out,
+		tsStart:     h.tsStart,
+		handlers:    h.handlers, // no clone intended
+		level:       h.level,
+		timeFormat:  h.timeFormat,
+		colorObj:    h.colorObj, // no clone intended
+		symbolSet:   h.symbolSet,
+		tpl:         h.tpl, // no clone intended
+		uptimeFmt:   h.uptimeFmt,
+		replaceAttr: h.replaceAttr,
 	}
 }
 
@@ -84,7 +87,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
 	}
-	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet, h.uptimeFmt)
+	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet, h.uptimeFmt, h.replaceAttr)
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:
