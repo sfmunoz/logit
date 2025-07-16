@@ -36,7 +36,7 @@ func (h *Handler) WithTimeFormat(t string) *Handler {
 	return c
 }
 
-func (h *Handler) WithUptimeFormat(uptimeFmt common.UptimeFormat) slog.Handler {
+func (h *Handler) WithUptimeFormat(uptimeFmt common.UptimeFormat) *Handler {
 	hc := h.clone()
 	hc.uptimeFmt = uptimeFmt
 	return hc
@@ -67,7 +67,7 @@ func (h *Handler) WithSymbolSet(symbolSet common.SymbolSet) *Handler {
 	return c
 }
 
-func (h *Handler) WithTpl(tpl ...common.Tpl) slog.Handler {
+func (h *Handler) WithTpl(tpl ...common.Tpl) *Handler {
 	tpl2 := make([]common.Tpl, 0, len(tpl))
 	for _, t := range tpl {
 		if !slices.Contains(tpl2, t) {
