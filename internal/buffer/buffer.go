@@ -36,7 +36,7 @@ const (
 var lMap = map[common.SymbolSet]map[slog.Level]string{
 	sn: {lt: "[T]", ld: "[D]", li: "[I]", ln: "[N]", lw: "[W]", le: "[E]", lf: "[F]"},
 	su: {lt: "Ⓣ", ld: "Ⓓ", li: "Ⓘ", ln: "Ⓝ", lw: "Ⓦ", le: "Ⓔ", lf: "Ⓕ"},
-	sd: {lt: "ⓣ", ld: "ⓓ", li: "ⓓ", ln: "ⓝ", lw: "ⓦ", le: "ⓔ", lf: "ⓕ"},
+	sd: {lt: "ⓣ", ld: "ⓓ", li: "ⓘ ", ln: "ⓝ", lw: "ⓦ", le: "ⓔ", lf: "ⓕ"},
 }
 
 type Buffer struct {
