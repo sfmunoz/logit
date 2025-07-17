@@ -44,19 +44,17 @@ type Buffer struct {
 	timeFmt     string
 	col         *color.Color
 	tsStart     time.Time
-	groups      []string
 	symbolSet   common.SymbolSet
 	uptimeFmt   common.UptimeFormat
 	replaceAttr common.ReplaceAttr
 }
 
-func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, groups []string, symbolSet common.SymbolSet, uptimeFmt common.UptimeFormat, replaceAttr common.ReplaceAttr) *Buffer {
+func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, symbolSet common.SymbolSet, uptimeFmt common.UptimeFormat, replaceAttr common.ReplaceAttr) *Buffer {
 	return &Buffer{
 		arr:         make([]string, 0, 20),
 		timeFmt:     timeFmt,
 		col:         col,
 		tsStart:     tsStart,
-		groups:      groups,
 		symbolSet:   symbolSet,
 		uptimeFmt:   uptimeFmt,
 		replaceAttr: replaceAttr,
@@ -179,11 +177,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 		fk = b.col.ErKFunc
 		fv = b.col.ErVFunc
 	}
-	pref := ""
-	if len(b.groups) > 0 {
-		pref = strings.Join(b.groups, ".") + "."
-	}
-	b.arr = append(b.arr, fk[0]()+pref+key+"="+fk[1]()+fv[0]()+val2+fv[1]())
+	b.arr = append(b.arr, fk[0]()+key+"="+fk[1]()+fv[0]()+val2+fv[1]())
 }
 
 func (b *Buffer) uptimeStr(uptime time.Duration) string {
