@@ -7,6 +7,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"sync"
@@ -20,6 +21,10 @@ import (
 type attr struct {
 	slog.Attr
 	withGroup bool // comes from WithGroup()
+}
+
+func (a attr) String() string {
+	return fmt.Sprintf("%v %v %v", a.Attr, a.Value.Kind(), a.withGroup)
 }
 
 type Handler struct {
@@ -85,6 +90,10 @@ func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= h.level.Level()
 }
 
+func gAppend(g slog.Attr, a slog.Attr) {
+	g.Value = slog.GroupValue(append(g.Value.Group(), a)...)
+}
+
 func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
@@ -103,19 +112,42 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		case common.TplMessage:
 			buf.PushMessage(r)
 		case common.TplAttrs:
-			attrs_root := make([]slog.Attr, 0)
+			gRoot := slog.Group("__root__")
+			gCurr := gRoot
 			for _, a := range h.attrs {
-				attrs_root = append(attrs_root, a.Attr)
-				// TODO
-				// if a.withGroup { } else { }
+				if a.withGroup {
+					g := slog.Group(a.Key)
+					gAppend(gCurr, g)
+					gCurr = g
+				} else {
+					gAppend(gCurr, a.Attr)
+				}
 			}
-			r.Attrs(func(attr slog.Attr) bool {
-				attrs_root = append(attrs_root, attr)
+			r.Attrs(func(a slog.Attr) bool {
+				gAppend(gCurr, a)
 				return true
 			})
-			for _, a := range attrs_root {
-				buf.PushAttr(a)
-			}
+			buf.PushAttr(gRoot)
+			//buf.PushAttr(
+			//	slog.Group(
+			//		"__root__",
+			//		slog.Int("k1", 1),
+			//		slog.Int("k11", 11),
+			//		slog.Int("k111", 111),
+			//		slog.Group(
+			//			"g2",
+			//			slog.Int("k2", 2),
+			//			slog.Group(
+			//				"g3",
+			//				slog.Int("k3", 3),
+			//				slog.Group(
+			//					"g4",
+			//					slog.Int("k4", 4),
+			//				),
+			//			),
+			//		),
+			//	),
+			//)
 		}
 	}
 	if buf.Len() == 0 {
@@ -149,10 +181,14 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 	}
 	hc := h.clone()
 	l := len(h.attrs)
+	fmt.Println("#### WithGroup ####", name, "l=", l)
 	hc.attrs = make([]attr, l+1)
 	if l > 0 {
 		copy(hc.attrs, h.attrs)
 	}
 	hc.attrs[l] = attr{Attr: slog.Group(name), withGroup: true}
+	for i, x := range hc.attrs {
+		fmt.Println(i, "->", x)
+	}
 	return hc
 }

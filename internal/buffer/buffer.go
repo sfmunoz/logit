@@ -129,9 +129,14 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 	}
 	kind := attr.Value.Kind()
 	if kind == slog.KindGroup {
-		for _, a := range attr.Value.Group() {
-			k := attr.Key + "." + a.Key
-			b.PushAttr(slog.Attr{Key: k, Value: a.Value})
+		if attr.Key == "__root__" {
+			for _, a := range attr.Value.Group() {
+				b.PushAttr(a)
+			}
+		} else {
+			for _, a := range attr.Value.Group() {
+				b.PushAttr(slog.Attr{Key: attr.Key + "." + a.Key, Value: a.Value})
+			}
 		}
 		return
 	}
