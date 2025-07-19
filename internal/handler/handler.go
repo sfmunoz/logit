@@ -7,6 +7,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"sync"
@@ -17,9 +18,17 @@ import (
 	"github.com/sfmunoz/logit/internal/common"
 )
 
+type attr struct {
+	slog.Attr
+	withGroup bool // comes from WithGroup()
+}
+
+func (a attr) String() string {
+	return fmt.Sprintf("%v %v %v", a.Attr, a.Value.Kind(), a.withGroup)
+}
+
 type Handler struct {
-	attrs  []slog.Attr
-	groups []string
+	attrs []attr
 
 	mu       sync.Mutex
 	out      io.Writer
@@ -40,8 +49,7 @@ func NewHandler() *Handler {
 	// time.StampMilli = "Jan _2 15:04:05.000"
 	// 999: drops trailing 0; 000: keeps trailing 0
 	return &Handler{
-		attrs:      make([]slog.Attr, 0),
-		groups:     make([]string, 0),
+		attrs:      make([]attr, 0),
 		out:        LogitWriterEnv(),
 		tsStart:    time.Now().UTC(),
 		handlers:   make([]slog.Handler, 0),
@@ -64,8 +72,7 @@ func NewHandler() *Handler {
 
 func (h *Handler) clone() *Handler {
 	return &Handler{
-		attrs:       h.attrs,  // no clone intended
-		groups:      h.groups, // no clone intended
+		attrs:       h.attrs, // no clone intended
 		out:         h.out,
 		tsStart:     h.tsStart,
 		handlers:    h.handlers, // no clone intended
@@ -87,7 +94,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
 	}
-	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.groups, h.symbolSet, h.uptimeFmt, h.replaceAttr)
+	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.symbolSet, h.uptimeFmt, h.replaceAttr)
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:
@@ -101,13 +108,31 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		case common.TplMessage:
 			buf.PushMessage(r)
 		case common.TplAttrs:
-			for _, attr := range h.attrs {
-				buf.PushAttr(attr)
+			g0 := make([][]any, 0)
+			g1 := []any{common.RootGroup}
+			for _, a := range h.attrs {
+				if a.withGroup {
+					g0 = append(g0, g1)
+					g1 = []any{a.Key}
+				} else {
+					g1 = append(g1, a.Attr)
+				}
 			}
-			r.Attrs(func(attr slog.Attr) bool {
-				buf.PushAttr(attr)
+			r.Attrs(func(a slog.Attr) bool {
+				g1 = append(g1, a)
 				return true
 			})
+			g0 = append(g0, g1)
+			var gRoot *slog.Attr = nil
+			for i := len(g0) - 1; i >= 0; i-- {
+				attrs := g0[i]
+				if gRoot != nil {
+					attrs = append(attrs, *gRoot)
+				}
+				gtmp := slog.Group(attrs[0].(string), attrs[1:]...)
+				gRoot = &gtmp
+			}
+			buf.PushAttr(*gRoot)
 		}
 	}
 	if buf.Len() == 0 {
@@ -124,7 +149,14 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		return h
 	}
 	hc := h.clone()
-	hc.attrs = attrs
+	l := len(h.attrs)
+	hc.attrs = make([]attr, l+len(attrs))
+	if l > 0 {
+		copy(hc.attrs, h.attrs)
+	}
+	for i, a := range attrs {
+		hc.attrs[l+i] = attr{Attr: a, withGroup: false}
+	}
 	return hc
 }
 
@@ -133,6 +165,11 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 		return h
 	}
 	hc := h.clone()
-	hc.groups = append(hc.groups, name)
+	l := len(h.attrs)
+	hc.attrs = make([]attr, l+1)
+	if l > 0 {
+		copy(hc.attrs, h.attrs)
+	}
+	hc.attrs[l] = attr{Attr: slog.Group(name), withGroup: true}
 	return hc
 }

@@ -40,4 +40,6 @@ const (
 
 	UptimeAdhoc UptimeFormat = iota
 	UptimeStd
+
+	RootGroup = "__root__"
 )
