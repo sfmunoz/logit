@@ -71,7 +71,7 @@ func NewHandler() *Handler {
 }
 
 func (h *Handler) clone() *Handler {
-	return &Handler{
+	ret := &Handler{
 		attrs:       h.attrs, // no clone intended
 		out:         h.out,
 		tsStart:     h.tsStart,
@@ -80,10 +80,12 @@ func (h *Handler) clone() *Handler {
 		timeFormat:  h.timeFormat,
 		colorObj:    h.colorObj, // no clone intended
 		symbolSet:   h.symbolSet,
-		tpl:         h.tpl, // no clone intended
+		tpl:         make([]common.Tpl, len(h.tpl)),
 		uptimeFmt:   h.uptimeFmt,
 		replaceAttr: h.replaceAttr,
 	}
+	copy(ret.tpl, h.tpl)
+	return ret
 }
 
 func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
