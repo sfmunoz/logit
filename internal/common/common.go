@@ -43,3 +43,35 @@ const (
 
 	RootGroup = "__root__"
 )
+
+func AttrCopy(attr slog.Attr) slog.Attr {
+	_copy := func(val slog.Value) slog.Value {
+		switch val.Kind() {
+		case slog.KindGroup:
+			gv := val.Group()
+			g := make([]slog.Attr, len(gv))
+			for i, attr := range gv {
+				g[i] = AttrCopy(attr)
+			}
+			return slog.GroupValue(g...)
+		case slog.KindAny:
+			any := val.Any()
+			switch v := any.(type) {
+			case []slog.Attr:
+				g := make([]slog.Attr, len(v))
+				for i, attr := range v {
+					g[i] = AttrCopy(attr)
+				}
+				return slog.AnyValue(g)
+			default:
+				return val // shallow
+			}
+		default:
+			return val
+		}
+	}
+	return slog.Attr{
+		Key:   attr.Key,
+		Value: _copy(attr.Value),
+	}
+}

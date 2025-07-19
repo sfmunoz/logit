@@ -72,7 +72,7 @@ func NewHandler() *Handler {
 
 func (h *Handler) clone() *Handler {
 	ret := &Handler{
-		attrs:       h.attrs, // no clone intended
+		attrs:       make([]attr, len(h.attrs)),
 		out:         h.out,
 		tsStart:     h.tsStart,
 		handlers:    h.handlers, // no clone intended
@@ -83,6 +83,12 @@ func (h *Handler) clone() *Handler {
 		tpl:         make([]common.Tpl, len(h.tpl)),
 		uptimeFmt:   h.uptimeFmt,
 		replaceAttr: h.replaceAttr,
+	}
+	for i, a := range h.attrs {
+		ret.attrs[i] = attr{
+			Attr:      common.AttrCopy(a.Attr),
+			withGroup: a.withGroup,
+		}
 	}
 	copy(ret.tpl, h.tpl)
 	return ret
