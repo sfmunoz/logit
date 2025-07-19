@@ -159,8 +159,8 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	hc := h.clone()
 	l := len(h.attrs)
 	hc.attrs = make([]attr, l+len(attrs))
-	if l > 0 {
-		copy(hc.attrs, h.attrs)
+	for i, a := range h.attrs {
+		hc.attrs[i] = attr{Attr: common.AttrCopy(a.Attr), withGroup: a.withGroup}
 	}
 	for i, a := range attrs {
 		hc.attrs[l+i] = attr{Attr: a, withGroup: false}
@@ -175,8 +175,8 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 	hc := h.clone()
 	l := len(h.attrs)
 	hc.attrs = make([]attr, l+1)
-	if l > 0 {
-		copy(hc.attrs, h.attrs)
+	for i, a := range h.attrs {
+		hc.attrs[i] = attr{Attr: common.AttrCopy(a.Attr), withGroup: a.withGroup}
 	}
 	hc.attrs[l] = attr{Attr: slog.Group(name), withGroup: true}
 	return hc
