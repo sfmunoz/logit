@@ -29,14 +29,27 @@ func NewLogger(h slog.Handler) *Logger {
 	return &Logger{logInner}
 }
 
+func (l *Logger) clone() *Logger {
+	c := *l
+	return &c
+}
+
 func (l *Logger) With(args ...any) *Logger {
-	l.Logger = l.Logger.With(args...)
-	return l
+	if len(args) == 0 {
+		return l
+	}
+	c := l.clone()
+	c.Logger = l.Logger.With(args...)
+	return c
 }
 
 func (l *Logger) WithGroup(name string) *Logger {
-	l.Logger = l.Logger.WithGroup(name)
-	return l
+	if name == "" {
+		return l
+	}
+	c := l.clone()
+	c.Logger = l.Logger.WithGroup(name)
+	return c
 }
 
 func (l *Logger) Trace(msg string, args ...any) {
