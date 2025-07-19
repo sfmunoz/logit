@@ -90,10 +90,6 @@ func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= h.level.Level()
 }
 
-func gAppend(g slog.Attr, a slog.Attr) {
-	g.Value = slog.GroupValue(append(g.Value.Group(), a)...)
-}
-
 func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
@@ -112,42 +108,31 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		case common.TplMessage:
 			buf.PushMessage(r)
 		case common.TplAttrs:
-			gRoot := slog.Group("__root__")
-			gCurr := gRoot
+			g0 := make([][]any, 0)
+			g1 := []any{common.RootGroup}
 			for _, a := range h.attrs {
 				if a.withGroup {
-					g := slog.Group(a.Key)
-					gAppend(gCurr, g)
-					gCurr = g
+					g0 = append(g0, g1)
+					g1 = []any{a.Key}
 				} else {
-					gAppend(gCurr, a.Attr)
+					g1 = append(g1, a.Attr)
 				}
 			}
 			r.Attrs(func(a slog.Attr) bool {
-				gAppend(gCurr, a)
+				g1 = append(g1, a)
 				return true
 			})
-			buf.PushAttr(gRoot)
-			//buf.PushAttr(
-			//	slog.Group(
-			//		"__root__",
-			//		slog.Int("k1", 1),
-			//		slog.Int("k11", 11),
-			//		slog.Int("k111", 111),
-			//		slog.Group(
-			//			"g2",
-			//			slog.Int("k2", 2),
-			//			slog.Group(
-			//				"g3",
-			//				slog.Int("k3", 3),
-			//				slog.Group(
-			//					"g4",
-			//					slog.Int("k4", 4),
-			//				),
-			//			),
-			//		),
-			//	),
-			//)
+			g0 = append(g0, g1)
+			var gRoot *slog.Attr = nil
+			for i := len(g0) - 1; i >= 0; i-- {
+				attrs := g0[i]
+				if gRoot != nil {
+					attrs = append(attrs, *gRoot)
+				}
+				gtmp := slog.Group(attrs[0].(string), attrs[1:]...)
+				gRoot = &gtmp
+			}
+			buf.PushAttr(*gRoot)
 		}
 	}
 	if buf.Len() == 0 {
@@ -181,14 +166,10 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 	}
 	hc := h.clone()
 	l := len(h.attrs)
-	fmt.Println("#### WithGroup ####", name, "l=", l)
 	hc.attrs = make([]attr, l+1)
 	if l > 0 {
 		copy(hc.attrs, h.attrs)
 	}
 	hc.attrs[l] = attr{Attr: slog.Group(name), withGroup: true}
-	for i, x := range hc.attrs {
-		fmt.Println(i, "->", x)
-	}
 	return hc
 }
