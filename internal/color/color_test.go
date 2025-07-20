@@ -7,6 +7,7 @@
 package color_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -42,6 +43,23 @@ func colAssert(t *testing.T, msg, got, want string) {
 	t.Fatalf("%s failed: want='%+v', got='%+v'", msg, prune(want), prune(got))
 }
 
+func dynAssert(t *testing.T, name string, fn []color.ColFunc) {
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelTrace)", name), fn[0](common.LevelTrace), ansiCyan+ansiFaint)
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelDebug)", name), fn[0](common.LevelDebug), ansiWhite+ansiFaint)
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelInfo)", name), fn[0](common.LevelInfo), ansiGreen)
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelNotice)", name), fn[0](common.LevelNotice), ansiBlue)
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelWarn)", name), fn[0](common.LevelWarn), ansiYellow)
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelError)", name), fn[0](common.LevelError), ansiRed)
+	colAssert(t, fmt.Sprintf("%s[0](common.LevelFatal)", name), fn[0](common.LevelFatal), ansiRed+ansiBold)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelTrace)", name), fn[1](common.LevelTrace), ansiReset)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelDebug)", name), fn[1](common.LevelDebug), ansiReset)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelInfo)", name), fn[1](common.LevelInfo), ansiReset)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelNotice)", name), fn[1](common.LevelNotice), ansiReset)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelWarn)", name), fn[1](common.LevelWarn), ansiReset)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelError)", name), fn[1](common.LevelError), ansiReset)
+	colAssert(t, fmt.Sprintf("%s[1](common.LevelFatal)", name), fn[1](common.LevelFatal), ansiReset)
+}
+
 func TestColorOff(t *testing.T) {
 	c := color.NewColor(common.ColorOff)
 	colAssert(t, "c.TimFunc[0]()", c.TimFunc[0](), "")
@@ -70,20 +88,7 @@ func TestColorSmart(t *testing.T) {
 	colAssert(t, "c.TimFunc[1]()", c.TimFunc[1](), ansiReset)
 	colAssert(t, "c.UptFunc[0]()", c.UptFunc[0](), ansiCyan+ansiFaint)
 	colAssert(t, "c.UptFunc[1]()", c.UptFunc[1](), ansiReset)
-	colAssert(t, "c.LvlFunc[0](common.LevelTrace)", c.LvlFunc[0](common.LevelTrace), ansiCyan+ansiFaint)
-	colAssert(t, "c.LvlFunc[0](common.LevelDebug)", c.LvlFunc[0](common.LevelDebug), ansiWhite+ansiFaint)
-	colAssert(t, "c.LvlFunc[0](common.LevelInfo)", c.LvlFunc[0](common.LevelInfo), ansiGreen)
-	colAssert(t, "c.LvlFunc[0](common.LevelNotice)", c.LvlFunc[0](common.LevelNotice), ansiBlue)
-	colAssert(t, "c.LvlFunc[0](common.LevelWarn)", c.LvlFunc[0](common.LevelWarn), ansiYellow)
-	colAssert(t, "c.LvlFunc[0](common.LevelError)", c.LvlFunc[0](common.LevelError), ansiRed)
-	colAssert(t, "c.LvlFunc[0](common.LevelFatal)", c.LvlFunc[0](common.LevelFatal), ansiRed+ansiBold)
-	colAssert(t, "c.LvlFunc[1](common.LevelTrace)", c.LvlFunc[1](common.LevelTrace), ansiReset)
-	colAssert(t, "c.LvlFunc[1](common.LevelDebug)", c.LvlFunc[1](common.LevelDebug), ansiReset)
-	colAssert(t, "c.LvlFunc[1](common.LevelInfo)", c.LvlFunc[1](common.LevelInfo), ansiReset)
-	colAssert(t, "c.LvlFunc[1](common.LevelNotice)", c.LvlFunc[1](common.LevelNotice), ansiReset)
-	colAssert(t, "c.LvlFunc[1](common.LevelWarn)", c.LvlFunc[1](common.LevelWarn), ansiReset)
-	colAssert(t, "c.LvlFunc[1](common.LevelError)", c.LvlFunc[1](common.LevelError), ansiReset)
-	colAssert(t, "c.LvlFunc[1](common.LevelFatal)", c.LvlFunc[1](common.LevelFatal), ansiReset)
+	dynAssert(t, "c.LvlFunc", c.LvlFunc)
 	colAssert(t, "c.SrcFunc[0]()", c.SrcFunc[0](), ansiWhite+ansiFaint)
 	colAssert(t, "c.SrcFunc[1]()", c.SrcFunc[1](), ansiReset)
 	colAssert(t, "c.MsgFunc[0]()", c.MsgFunc[0](), ansiWhite)
