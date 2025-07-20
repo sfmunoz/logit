@@ -21,6 +21,7 @@ import (
 )
 
 const timeFmt = "2006-01-02T15:04:05.000Z07:00"
+const timePat = `2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\.[0-9]{3}Z`
 
 var colorOff = color.NewColor(common.ColorOff)
 var tsStart = time.Now().UTC()
@@ -81,5 +82,23 @@ func TestBuffer3(t *testing.T) {
 	buf.PushSource(r)
 	buf.PushLevel(r)
 	buf.PushMessage(r)
-	assert(t, buf, `^<.+/.+:[0-9]+> \[I] hello$`)
+	assert(t, buf, `^<.+/.+\.go:[0-9]+> \[I] hello$`)
+}
+
+func TestBuffer4(t *testing.T) {
+	buf := simpleBuf()
+	r := record("hello")
+	buf.PushLevel(r)
+	buf.PushMessage(r)
+	buf.PushAttr(slog.Int("k1", 111))
+	assert(t, buf, `^\[I] hello k1=111$`)
+}
+
+func TestBuffer5(t *testing.T) {
+	buf := simpleBuf()
+	r := record("hello")
+	buf.PushLevel(r)
+	buf.PushMessage(r)
+	buf.PushTime(r)
+	assert(t, buf, `^\[I] hello `+timePat+`$`)
 }
