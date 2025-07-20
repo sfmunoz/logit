@@ -2,14 +2,15 @@
 // Author: 46285520+sfmunoz@users.noreply.github.com
 // URL:    https://github.com/sfmunoz/logit
 //
-//
 
 package buffer_test
 
 import (
 	"bytes"
 	"log/slog"
+	"regexp"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,15 +35,23 @@ func record(msg string, args ...any) slog.Record {
 	return r
 }
 
-func assert(t *testing.T, buf *buffer.Buffer, want string) {
+func assert(t *testing.T, buf *buffer.Buffer, re string) {
+	want, err := regexp.Compile(re)
+	if err != nil {
+		t.Fatalf("regexp.Compile(%s) failed: %s", re, err)
+	}
 	var out bytes.Buffer
-	_, err := buf.WriteTo(&out)
+	_, err = buf.WriteTo(&out)
 	if err != nil {
 		t.Fatalf("buf.WriteTo() failed: %s", err)
 	}
 	got := out.String()
-	if got != want {
-		t.Fatalf("assert(): want='%s', got='%s'", want, got)
+	if !strings.HasSuffix(got, "\n") {
+		t.Fatalf("assert(): got='%s' doesn't have '\\n' suffix", got)
+	}
+	got = strings.TrimRight(got, "\n")
+	if !want.MatchString(got) {
+		t.Fatalf("assert(): got='%s' doesn't match want='%s'", got, want)
 	}
 }
 
@@ -55,7 +64,7 @@ func TestBuffer1(t *testing.T) {
 	r := record("hello")
 	buf.PushMessage(r)
 	buf.PushLevel(r)
-	assert(t, buf, "hello [I]\n")
+	assert(t, buf, `^hello \[I]$`)
 }
 
 func TestBuffer2(t *testing.T) {
@@ -63,5 +72,14 @@ func TestBuffer2(t *testing.T) {
 	r := record("hello")
 	buf.PushLevel(r)
 	buf.PushMessage(r)
-	assert(t, buf, "[I] hello\n")
+	assert(t, buf, `^\[I] hello$`)
+}
+
+func TestBuffer3(t *testing.T) {
+	buf := simpleBuf()
+	r := record("hello")
+	buf.PushSource(r)
+	buf.PushLevel(r)
+	buf.PushMessage(r)
+	assert(t, buf, `^<.+/.+:[0-9]+> \[I] hello$`)
 }
