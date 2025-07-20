@@ -7,7 +7,6 @@ package logger_test
 
 import (
 	"bytes"
-	"context"
 	"regexp"
 	"strings"
 	"testing"
@@ -21,8 +20,6 @@ const timePat = `2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9
 
 // 0d00h00m00.000s
 const durPat = `[0-9]d([0-1][0-9]|2[0-3])h[0-5][0-9]m[0-5][0-9]\.[0-9]{3}s`
-
-var ctx = context.Background()
 
 func assert(t *testing.T, l *logger.Logger, msg string, re string) {
 	want, err := regexp.Compile(re)
