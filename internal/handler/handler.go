@@ -37,6 +37,7 @@ type Handler struct {
 
 	level       slog.Leveler
 	timeFormat  string
+	colorMode   common.ColorMode
 	colorObj    *color.Color
 	symbolSet   common.SymbolSet
 	tpl         []common.Tpl
@@ -48,6 +49,7 @@ func NewHandler() *Handler {
 	// time.RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
 	// time.StampMilli = "Jan _2 15:04:05.000"
 	// 999: drops trailing 0; 000: keeps trailing 0
+	colorMode := LogitColorModeEnv()
 	return &Handler{
 		attrs:      make([]attr, 0),
 		out:        LogitWriterEnv(),
@@ -55,7 +57,8 @@ func NewHandler() *Handler {
 		handlers:   make([]slog.Handler, 0),
 		level:      LogitLevelEnv(),
 		timeFormat: LogitTimeFormatEnv(),
-		colorObj:   color.NewColor(LogitColorModeEnv()),
+		colorMode:  colorMode,
+		colorObj:   color.NewColor(colorMode),
 		symbolSet:  LogitSymbolSetEnv(),
 		tpl: []common.Tpl{
 			common.TplTime,
@@ -78,7 +81,8 @@ func (h *Handler) clone() *Handler {
 		handlers:    h.handlers, // no clone intended
 		level:       h.level,
 		timeFormat:  h.timeFormat,
-		colorObj:    h.colorObj, // no clone intended
+		colorMode:   h.colorMode,
+		colorObj:    color.NewColor(h.colorMode),
 		symbolSet:   h.symbolSet,
 		tpl:         make([]common.Tpl, len(h.tpl)),
 		uptimeFmt:   h.uptimeFmt,
