@@ -38,18 +38,16 @@ func record(msg string, args ...any) slog.Record {
 	return r
 }
 
-func TestHandler1(t *testing.T) {
-	var out bytes.Buffer
-	h := handler.NewHandler().WithWriter(&out).WithColor(false)
-	r := record("hello")
-	err := h.Handle(ctx, r)
-	if err != nil {
-		t.Fatalf("h.Handle() failed: %s", err)
-	}
-	re := `^` + timePat + ` ` + durPat + ` \[I] hello$`
+func assert(t *testing.T, h *handler.Handler, r slog.Record, re string) {
 	want, err := regexp.Compile(re)
 	if err != nil {
 		t.Fatalf("regexp.Compile(%s) failed: %s", re, err)
+	}
+	var out bytes.Buffer
+	h = h.WithWriter(&out)
+	err = h.Handle(ctx, r)
+	if err != nil {
+		t.Fatalf("h.Handle() failed: %s", err)
 	}
 	got := out.String()
 	if !strings.HasSuffix(got, "\n") {
@@ -59,4 +57,41 @@ func TestHandler1(t *testing.T) {
 	if !want.MatchString(got) {
 		t.Fatalf("assert(): got='%s' doesn't match want='%s'", got, want)
 	}
+}
+
+func TestHandler1(t *testing.T) {
+	h := handler.NewHandler().
+		WithColor(false)
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello$`
+	assert(t, h, r, re)
+}
+
+func TestHandler2(t *testing.T) {
+	h := handler.NewHandler().
+		WithSymbolSet(logit.SymbolUnicodeUp).
+		WithColor(false)
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` Ⓘ hello$`
+	assert(t, h, r, re)
+}
+
+func TestHandler3(t *testing.T) {
+	h := handler.NewHandler().
+		WithColor(false).
+		WithAttrs([]slog.Attr{slog.String("k1", "v1")})
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello k1=v1$`
+	assert(t, h.(*handler.Handler), r, re)
+}
+
+func TestHandler4(t *testing.T) {
+	h := handler.NewHandler().
+		WithColor(false).
+		WithAttrs([]slog.Attr{slog.String("k1", "v1")}).
+		WithGroup("g1").
+		WithAttrs([]slog.Attr{slog.String("k2", "v2")})
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello k1=v1 g1.k2=v2$`
+	assert(t, h.(*handler.Handler), r, re)
 }
