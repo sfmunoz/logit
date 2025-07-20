@@ -102,3 +102,22 @@ func TestColorSmart(t *testing.T) {
 	colAssert(t, "c.ErVFunc[0]()", c.ErVFunc[0](), ansiRed+ansiBold)
 	colAssert(t, "c.ErVFunc[1]()", c.ErVFunc[1](), ansiReset)
 }
+
+func TestColorMedium(t *testing.T) {
+	c := color.NewColor(common.ColorMedium)
+	colAssert(t, "c.TimFunc[0]()", c.TimFunc[0](), ansiWhite+ansiFaint)
+	colAssert(t, "c.TimFunc[1]()", c.TimFunc[1](), ansiReset)
+	colAssert(t, "c.UptFunc[0]()", c.UptFunc[0](), ansiCyan+ansiFaint)
+	colAssert(t, "c.UptFunc[1]()", c.UptFunc[1](), ansiReset)
+	dynAssert(t, "c.LvlFunc", c.LvlFunc)
+	dynAssert(t, "c.SrcFunc", c.SrcFunc)
+	dynAssert(t, "c.MsgFunc", c.MsgFunc)
+	colAssert(t, "c.KeyFunc[0]()", c.KeyFunc[0](), ansiWhite+ansiFaint)
+	colAssert(t, "c.KeyFunc[1]()", c.KeyFunc[1](), ansiReset)
+	colAssert(t, "c.ValFunc[0]()", c.ValFunc[0](), ansiWhite)
+	colAssert(t, "c.ValFunc[1]()", c.ValFunc[1](), ansiReset)
+	colAssert(t, "c.ErKFunc[0]()", c.ErKFunc[0](), ansiRed)
+	colAssert(t, "c.ErKFunc[1]()", c.ErKFunc[1](), ansiReset)
+	colAssert(t, "c.ErVFunc[0]()", c.ErVFunc[0](), ansiRed+ansiBold)
+	colAssert(t, "c.ErVFunc[1]()", c.ErVFunc[1](), ansiReset)
+}
