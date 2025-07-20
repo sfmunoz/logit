@@ -2,19 +2,15 @@
 // Author: 46285520+sfmunoz@users.noreply.github.com
 // URL:    https://github.com/sfmunoz/logit
 //
-//
 
 package logger_test
 
 import (
 	"bytes"
 	"context"
-	"log/slog"
 	"regexp"
-	"runtime"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/sfmunoz/logit"
 	"github.com/sfmunoz/logit/internal/logger"
@@ -27,16 +23,6 @@ const timePat = `2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9
 const durPat = `[0-9]d([0-1][0-9]|2[0-3])h[0-5][0-9]m[0-5][0-9]\.[0-9]{3}s`
 
 var ctx = context.Background()
-
-func record(msg string, args ...any) slog.Record {
-	var pc uintptr
-	var pcs [1]uintptr
-	runtime.Callers(3, pcs[:])
-	pc = pcs[0]
-	r := slog.NewRecord(time.Now(), logit.LevelInfo, msg, pc)
-	r.Add(args...)
-	return r
-}
 
 func assert(t *testing.T, l *logger.Logger, msg string, re string) {
 	want, err := regexp.Compile(re)
