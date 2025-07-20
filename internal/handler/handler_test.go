@@ -49,7 +49,8 @@ func TestFanout(t *testing.T) {
 	h2 := slog.NewJSONHandler(os.Stderr, opts2)
 	h := handler.NewHandler().
 		WithLeveler(lv).
-		WithHandlers([]slog.Handler{h1, h2})
+		WithHandlers([]slog.Handler{h1, h2}).
+		WithColor(false)
 	logger := slog.New(h)
 	slog.SetDefault(logger)
 	slog.Info("Message repeated", "times", 3)

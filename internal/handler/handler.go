@@ -37,6 +37,7 @@ type Handler struct {
 
 	level       slog.Leveler
 	timeFormat  string
+	colorMode   common.ColorMode
 	colorObj    *color.Color
 	symbolSet   common.SymbolSet
 	tpl         []common.Tpl
@@ -48,6 +49,7 @@ func NewHandler() *Handler {
 	// time.RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
 	// time.StampMilli = "Jan _2 15:04:05.000"
 	// 999: drops trailing 0; 000: keeps trailing 0
+	colorMode := LogitColorModeEnv()
 	return &Handler{
 		attrs:      make([]attr, 0),
 		out:        LogitWriterEnv(),
@@ -55,7 +57,8 @@ func NewHandler() *Handler {
 		handlers:   make([]slog.Handler, 0),
 		level:      LogitLevelEnv(),
 		timeFormat: LogitTimeFormatEnv(),
-		colorObj:   color.NewColor(LogitColorModeEnv()),
+		colorMode:  colorMode,
+		colorObj:   color.NewColor(colorMode),
 		symbolSet:  LogitSymbolSetEnv(),
 		tpl: []common.Tpl{
 			common.TplTime,
@@ -71,19 +74,29 @@ func NewHandler() *Handler {
 }
 
 func (h *Handler) clone() *Handler {
-	return &Handler{
-		attrs:       h.attrs, // no clone intended
+	ret := &Handler{
+		attrs:       make([]attr, len(h.attrs)),
 		out:         h.out,
 		tsStart:     h.tsStart,
-		handlers:    h.handlers, // no clone intended
+		handlers:    make([]slog.Handler, len(h.handlers)),
 		level:       h.level,
 		timeFormat:  h.timeFormat,
-		colorObj:    h.colorObj, // no clone intended
+		colorMode:   h.colorMode,
+		colorObj:    color.NewColor(h.colorMode),
 		symbolSet:   h.symbolSet,
-		tpl:         h.tpl, // no clone intended
+		tpl:         make([]common.Tpl, len(h.tpl)),
 		uptimeFmt:   h.uptimeFmt,
 		replaceAttr: h.replaceAttr,
 	}
+	for i, a := range h.attrs {
+		ret.attrs[i] = attr{
+			Attr:      common.AttrCopy(a.Attr),
+			withGroup: a.withGroup,
+		}
+	}
+	copy(ret.handlers, h.handlers)
+	copy(ret.tpl, h.tpl)
+	return ret
 }
 
 func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
@@ -151,8 +164,8 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	hc := h.clone()
 	l := len(h.attrs)
 	hc.attrs = make([]attr, l+len(attrs))
-	if l > 0 {
-		copy(hc.attrs, h.attrs)
+	for i, a := range h.attrs {
+		hc.attrs[i] = attr{Attr: common.AttrCopy(a.Attr), withGroup: a.withGroup}
 	}
 	for i, a := range attrs {
 		hc.attrs[l+i] = attr{Attr: a, withGroup: false}
@@ -167,8 +180,8 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 	hc := h.clone()
 	l := len(h.attrs)
 	hc.attrs = make([]attr, l+1)
-	if l > 0 {
-		copy(hc.attrs, h.attrs)
+	for i, a := range h.attrs {
+		hc.attrs[i] = attr{Attr: common.AttrCopy(a.Attr), withGroup: a.withGroup}
 	}
 	hc.attrs[l] = attr{Attr: slog.Group(name), withGroup: true}
 	return hc

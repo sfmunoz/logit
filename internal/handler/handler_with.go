@@ -44,6 +44,7 @@ func (h *Handler) WithUptimeFormat(uptimeFmt common.UptimeFormat) *Handler {
 
 func (h *Handler) WithColorMode(cm common.ColorMode) *Handler {
 	c := h.clone()
+	c.colorMode = cm
 	c.colorObj = color.NewColor(cm)
 	return c
 }
