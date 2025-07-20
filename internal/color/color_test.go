@@ -121,3 +121,20 @@ func TestColorMedium(t *testing.T) {
 	colAssert(t, "c.ErVFunc[0]()", c.ErVFunc[0](), ansiRed+ansiBold)
 	colAssert(t, "c.ErVFunc[1]()", c.ErVFunc[1](), ansiReset)
 }
+
+func TestColorFull(t *testing.T) {
+	c := color.NewColor(common.ColorFull)
+	dynAssert(t, "c.TimFunc", c.TimFunc)
+	dynAssert(t, "c.UptFunc", c.UptFunc)
+	dynAssert(t, "c.LvlFunc", c.LvlFunc)
+	dynAssert(t, "c.SrcFunc", c.SrcFunc)
+	dynAssert(t, "c.MsgFunc", c.MsgFunc)
+	colAssert(t, "c.KeyFunc[0]()", c.KeyFunc[0](), ansiWhite+ansiFaint)
+	colAssert(t, "c.KeyFunc[1]()", c.KeyFunc[1](), ansiReset)
+	colAssert(t, "c.ValFunc[0]()", c.ValFunc[0](), ansiWhite)
+	colAssert(t, "c.ValFunc[1]()", c.ValFunc[1](), ansiReset)
+	colAssert(t, "c.ErKFunc[0]()", c.ErKFunc[0](), ansiRed)
+	colAssert(t, "c.ErKFunc[1]()", c.ErKFunc[1](), ansiReset)
+	colAssert(t, "c.ErVFunc[0]()", c.ErVFunc[0](), ansiRed+ansiBold)
+	colAssert(t, "c.ErVFunc[1]()", c.ErVFunc[1](), ansiReset)
+}
