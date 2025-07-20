@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
 	"reflect"
 	"runtime"
 	"time"
@@ -62,6 +63,12 @@ func example2() {
 }
 
 func example3() {
+	log.Info("log := logit.Logit().")
+	log.Info("    With(\"k1\", \"v1\").")
+	log.Info("    WithGroup(\"g1\").")
+	log.Info("    With(\"k2\", \"v2\").")
+	log.Info("    WithGroup(\"g2\").")
+	log.Info("    WithGroup(\"g3\")")
 	log := logit.Logit().
 		With("k1", "v1").
 		WithGroup("g1").
@@ -89,8 +96,36 @@ func example3() {
 		)
 }
 
+func example4() {
+	log.Info("log := logit.Logit().WithHandlers(")
+	log.Info("    []slog.Handler{")
+	log.Info("        slog.NewTextHandler(")
+	log.Info("            os.Stderr,")
+	log.Info("            &slog.HandlerOptions{AddSource: true, Level: logit.LevelInfo},")
+	log.Info("        ),")
+	log.Info("        slog.NewJSONHandler(")
+	log.Info("            os.Stderr,")
+	log.Info("            &slog.HandlerOptions{AddSource: false, Level: logit.LevelInfo},")
+	log.Info("        ),")
+	log.Info("    },")
+	log.Info(")")
+	log := logit.Logit().WithHandlers(
+		[]slog.Handler{
+			slog.NewTextHandler(
+				os.Stderr,
+				&slog.HandlerOptions{AddSource: true, Level: logit.LevelInfo},
+			),
+			slog.NewJSONHandler(
+				os.Stderr,
+				&slog.HandlerOptions{AddSource: false, Level: logit.LevelInfo},
+			),
+		},
+	)
+	log.Info("Message repeated", "times", 3)
+}
+
 func main() {
-	examples := []func(){example1, example2, example3}
+	examples := []func(){example1, example2, example3, example4}
 	for _, f := range examples {
 		fName := funcName(f)
 		log.Info("================ " + fName + " ================")
