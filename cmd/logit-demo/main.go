@@ -6,6 +6,8 @@
 package main
 
 import (
+	"context"
+	"log/slog"
 	"reflect"
 	"runtime"
 	"time"
@@ -41,9 +43,9 @@ func example1() {
 
 func example2() {
 	log.Info("logit.Logit().")
-	log.Info("WithLevel(logit.LevelTrace).")
-	log.Info("WithSymbolSet(logit.SymbolUnicodeDown).")
-	log.Info("WithTpl(logit.TplUptime, logit.TplLevel, logit.TplSource)")
+	log.Info("    WithLevel(logit.LevelTrace).")
+	log.Info("    WithSymbolSet(logit.SymbolUnicodeDown).")
+	log.Info("    WithTpl(logit.TplUptime, logit.TplLevel, logit.TplSource)")
 	log := logit.Logit().
 		WithLevel(logit.LevelTrace).
 		WithSymbolSet(logit.SymbolUnicodeDown).
@@ -59,8 +61,36 @@ func example2() {
 	//log.Panic("panic (logit)")
 }
 
+func example3() {
+	log := logit.Logit().
+		With("k1", "v1").
+		WithGroup("g1").
+		With("k2", "v2").
+		WithGroup("g2").
+		WithGroup("g3")
+	log.
+		WithGroup("g11").
+		LogAttrs(
+			context.Background(),
+			logit.LevelNotice, "(g11)",
+			slog.Int("a", 1),
+			slog.Int("b", 2),
+		)
+	log.
+		LogAttrs(
+			context.Background(),
+			logit.LevelNotice,
+			"(g12)",
+			slog.Group(
+				"g12",
+				slog.Int("a", 1),
+				slog.Int("b", 2),
+			),
+		)
+}
+
 func main() {
-	examples := []func(){example1, example2}
+	examples := []func(){example1, example2, example3}
 	for _, f := range examples {
 		fName := funcName(f)
 		log.Info("================ " + fName + " ================")
