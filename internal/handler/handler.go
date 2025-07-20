@@ -78,7 +78,7 @@ func (h *Handler) clone() *Handler {
 		attrs:       make([]attr, len(h.attrs)),
 		out:         h.out,
 		tsStart:     h.tsStart,
-		handlers:    h.handlers, // no clone intended
+		handlers:    make([]slog.Handler, len(h.handlers)),
 		level:       h.level,
 		timeFormat:  h.timeFormat,
 		colorMode:   h.colorMode,
@@ -94,6 +94,7 @@ func (h *Handler) clone() *Handler {
 			withGroup: a.withGroup,
 		}
 	}
+	copy(ret.handlers, h.handlers)
 	copy(ret.tpl, h.tpl)
 	return ret
 }
