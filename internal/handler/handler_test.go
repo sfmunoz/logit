@@ -7,66 +7,91 @@
 package handler_test
 
 import (
-	"errors"
-	"log"
+	"bytes"
+	"context"
 	"log/slog"
-	"os"
+	"regexp"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/sfmunoz/logit"
 	"github.com/sfmunoz/logit/internal/handler"
 )
 
-func TestRaw(t *testing.T) {
-	h := handler.NewHandler()
-	logger := slog.New(h)
-	slog.SetDefault(logger)
-	slog.Info("Starting server", "addr", ":8080", "env", "production")
-	slog.Debug("Connected to DB", "db", "myapp", "host", "localhost:5432")
-	slog.Warn("Slow request", "method", "GET", "path", "/users", "duration", 497*time.Millisecond)
-	slog.Error("DB connection lost", "err", "connection reset", "failure", errors.New("network off"), "db", "myapp")
-	log.Print("log.Print() message")
+// 2025-07-20T16:41:50.744Z
+const timePat = `2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\.[0-9]{3}Z`
+
+// 0d00h00m00.000s
+const durPat = `[0-9]d([0-1][0-9]|2[0-3])h[0-5][0-9]m[0-5][0-9]\.[0-9]{3}s`
+
+var ctx = context.Background()
+
+func record(msg string, args ...any) slog.Record {
+	var pc uintptr
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:])
+	pc = pcs[0]
+	r := slog.NewRecord(time.Now(), logit.LevelInfo, msg, pc)
+	r.Add(args...)
+	return r
 }
 
-func TestOpts(t *testing.T) {
-	h := handler.NewHandler().
-		WithWriter(os.Stderr).
-		WithLevel(slog.LevelDebug)
-	logger := slog.New(h)
-	slog.SetDefault(logger)
-	slog.Info("Starting server", "addr", ":8080", "env", "production")
-	slog.Debug("Connected to DB", "db", "myapp", "host", "localhost:5432")
-	slog.Warn("Slow request", "method", "GET", "path", "/users", "duration", 497*time.Millisecond)
-	slog.Error("DB connection lost", "err", "connection reset", "failure", errors.New("network off"), "db", "myapp")
+func assert(t *testing.T, h *handler.Handler, r slog.Record, re string) {
+	want, err := regexp.Compile(re)
+	if err != nil {
+		t.Fatalf("regexp.Compile(%s) failed: %s", re, err)
+	}
+	var out bytes.Buffer
+	h = h.WithWriter(&out)
+	err = h.Handle(ctx, r)
+	if err != nil {
+		t.Fatalf("h.Handle() failed: %s", err)
+	}
+	got := out.String()
+	if !strings.HasSuffix(got, "\n") {
+		t.Fatalf("assert(): got='%s' doesn't have '\\n' suffix", got)
+	}
+	got = strings.TrimRight(got, "\n")
+	if !want.MatchString(got) {
+		t.Fatalf("assert(): got='%s' doesn't match want='%s'", got, want)
+	}
 }
 
-func TestFanout(t *testing.T) {
-	lv := new(slog.LevelVar)
-	lv.Set(slog.LevelDebug)
-	opts1 := &slog.HandlerOptions{AddSource: true, Level: lv}
-	h1 := slog.NewTextHandler(os.Stderr, opts1)
-	opts2 := &slog.HandlerOptions{AddSource: false, Level: lv}
-	h2 := slog.NewJSONHandler(os.Stderr, opts2)
+func TestHandler1(t *testing.T) {
 	h := handler.NewHandler().
-		WithLeveler(lv).
-		WithHandlers([]slog.Handler{h1, h2}).
 		WithColor(false)
-	logger := slog.New(h)
-	slog.SetDefault(logger)
-	slog.Info("Message repeated", "times", 3)
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello$`
+	assert(t, h, r, re)
 }
 
-func TestWithAttrsGroup(t *testing.T) {
-	handler := handler.NewHandler()
-	logger := slog.New(handler).
-		With("\"a1\"", "v1").
+func TestHandler2(t *testing.T) {
+	h := handler.NewHandler().
+		WithSymbolSet(logit.SymbolUnicodeUp).
+		WithColor(false)
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` Ⓘ hello$`
+	assert(t, h, r, re)
+}
+
+func TestHandler3(t *testing.T) {
+	h := handler.NewHandler().
+		WithColor(false).
+		WithAttrs([]slog.Attr{slog.String("k1", "v1")})
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello k1=v1$`
+	assert(t, h.(*handler.Handler), r, re)
+}
+
+func TestHandler4(t *testing.T) {
+	h := handler.NewHandler().
+		WithColor(false).
+		WithAttrs([]slog.Attr{slog.String("k1", "v1")}).
 		WithGroup("g1").
-		WithGroup("g2").
-		With("\"a2\"", "v2")
-	slog.SetDefault(logger)
-	slog.Info("Starting server", "addr", ":8080", "env", "production")
-	slog.Debug("Connected to DB", "db", "myapp", "host", "localhost:5432")
-	slog.Warn("Slow request", "method", "GET", "path", "/users", "duration", 497*time.Millisecond)
-	slog.Error("DB connection lost", "err", "connection reset", "failure", errors.New("network off"), "db", "myapp")
-	log.Print("log.Print() message")
+		WithAttrs([]slog.Attr{slog.String("k2", "v2")})
+	r := record("hello")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello k1=v1 g1.k2=v2$`
+	assert(t, h.(*handler.Handler), r, re)
 }

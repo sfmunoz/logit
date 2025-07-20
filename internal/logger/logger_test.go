@@ -6,57 +6,67 @@
 package logger_test
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"log"
-	"log/slog"
+	"bytes"
+	"regexp"
+	"strings"
 	"testing"
-	"time"
 
-	"github.com/sfmunoz/logit/internal/common"
+	"github.com/sfmunoz/logit"
 	"github.com/sfmunoz/logit/internal/logger"
 )
 
-func replaceAttr(_ []string, a slog.Attr) slog.Attr {
-	if a.Key == "the-key" {
-		return slog.String("the-key", fmt.Sprintf("'%s'=>EXTENDED BY 'replaceAttr()'", a.Value))
+// 2025-07-20T16:41:50.744Z
+const timePat = `2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\.[0-9]{3}Z`
+
+// 0d00h00m00.000s
+const durPat = `[0-9]d([0-1][0-9]|2[0-3])h[0-5][0-9]m[0-5][0-9]\.[0-9]{3}s`
+
+func assert(t *testing.T, l *logger.Logger, msg string, re string) {
+	want, err := regexp.Compile(re)
+	if err != nil {
+		t.Fatalf("regexp.Compile(%s) failed: %s", re, err)
 	}
-	return slog.Attr{}
+	var out bytes.Buffer
+	l.WithWriter(&out).Info(msg)
+	got := out.String()
+	if !strings.HasSuffix(got, "\n") {
+		t.Fatalf("assert(): got='%s' doesn't have '\\n' suffix", got)
+	}
+	got = strings.TrimRight(got, "\n")
+	if !want.MatchString(got) {
+		t.Fatalf("assert(): got='%s' doesn't match want='%s'", got, want)
+	}
 }
 
-func inner(_ *testing.T, symbolSet common.SymbolSet) {
+func TestLogger1(t *testing.T) {
 	l := logger.NewLogger(nil).
-		With("a1", "v1").
+		WithColor(false)
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello$`
+	assert(t, l, "hello", re)
+}
+
+func TestLogger2(t *testing.T) {
+	l := logger.NewLogger(nil).
+		WithSymbolSet(logit.SymbolUnicodeUp).
+		WithColor(false)
+	re := `^` + timePat + ` ` + durPat + ` Ⓘ hello$`
+	assert(t, l, "hello", re)
+}
+
+func TestLogger3(t *testing.T) {
+	l := logger.NewLogger(nil).
+		WithColor(false).
+		With("k1", "v1")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello k1=v1$`
+	assert(t, l, "hello", re)
+}
+
+func TestLogger4(t *testing.T) {
+	l := logger.NewLogger(nil).
+		WithColor(false).
+		With("k1", "v1").
 		WithGroup("g1").
-		WithGroup("g2").
-		WithLevel(common.LevelTrace).
-		WithSymbolSet(symbolSet).
-		WithReplaceAttr(replaceAttr)
-	slog.SetDefault(l.Logger)
-	l.Info("symbols", "SymbolNone", common.SymbolNone, "SymbolUnicodeUp", common.SymbolUnicodeUp, "SymbolUnicodeDown", common.SymbolUnicodeDown, "Current", symbolSet)
-	l.Info("logger.NewLogger()", "type", fmt.Sprintf("%T", l))
-	slog.Info("Starting server", "addr", ":8080", "env", "production")
-	slog.Debug("Connected to DB", "db", "myapp", "host", "localhost:5432")
-	slog.Warn("Slow request", "method", "GET", "path", "/users", "duration", 497*time.Millisecond)
-	slog.Error("DB connection lost", "err", "connection reset", "failure", errors.New("network off"), "db", "myapp")
-	log.Print("log.Print() message")
-	l.Trace("trace", "the-key", "the-val")
-	l.WithTpl(common.TplLevel, common.TplUptime, common.TplUptime, common.TplLevel).Notice("notice (ad hoc template)", "the-key", "the-val")
-	//l.Fatal("fatal", "key", "val")
-	l.WithGroup("s").LogAttrs(context.Background(), common.LevelNotice, "(1) logger.WithGroup(\"s\")", slog.Int("a", 1), slog.Int("b", 2))
-	l.LogAttrs(context.Background(), common.LevelNotice, "(2) logger.WithGroup(\"s\")", slog.Group("s", slog.Int("a", 1), slog.Int("b", 2)))
-	slog.Log(context.Background(), common.LevelNotice, "slog.Log(LevelNotice)", "the-key", "the-val")
-}
-
-func TestPlain(t *testing.T) {
-	inner(t, common.SymbolNone)
-}
-
-func TestUnicodeUp(t *testing.T) {
-	inner(t, common.SymbolUnicodeUp)
-}
-
-func TestUnicodeDown(t *testing.T) {
-	inner(t, common.SymbolUnicodeDown)
+		With("k2", "v2")
+	re := `^` + timePat + ` ` + durPat + ` \[I] hello k1=v1 g1.k2=v2$`
+	assert(t, l, "hello", re)
 }
