@@ -26,14 +26,14 @@ const timePat = `2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([0-1][0-9
 var colorOff = color.NewColor(common.ColorOff)
 var tsStart = time.Now().UTC()
 
-func record(msg string, args ...any) slog.Record {
+func record(msg string, args ...any) *slog.Record {
 	var pc uintptr
 	var pcs [1]uintptr
 	runtime.Callers(3, pcs[:])
 	pc = pcs[0]
 	r := slog.NewRecord(time.Now(), logit.LevelInfo, msg, pc)
 	r.Add(args...)
-	return r
+	return &r
 }
 
 func assert(t *testing.T, buf *buffer.Buffer, re string) {
@@ -79,7 +79,8 @@ func TestBuffer3(t *testing.T) {
 
 func TestBuffer4(t *testing.T) {
 	r := record("hello")
-	buf := simpleBuf().PushLevel(r).PushMessage(r).PushAttr(slog.Int("k1", 111))
+	a := slog.Int("k1", 111)
+	buf := simpleBuf().PushLevel(r).PushMessage(r).PushAttr(&a)
 	assert(t, buf, `^\[I] hello k1=111$`)
 }
 
