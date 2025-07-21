@@ -70,56 +70,61 @@ func (b *Buffer) WriteTo(w io.Writer) (n int64, err error) {
 	return int64(tot), err
 }
 
-func (b *Buffer) PushTime(r slog.Record) {
+func (b *Buffer) PushTime(r slog.Record) *Buffer {
 	if r.Time.IsZero() {
-		return
+		return b
 	}
 	b.arr = append(
 		b.arr,
 		b.col.TimFunc[0](r.Level)+r.Time.Format(b.timeFmt)+b.col.TimFunc[1](r.Level),
 	)
+	return b
 }
 
-func (b *Buffer) PushUptime(r slog.Record) {
+func (b *Buffer) PushUptime(r slog.Record) *Buffer {
 	if r.Time.IsZero() {
-		return
+		return b
 	}
 	b.arr = append(
 		b.arr,
 		b.col.UptFunc[0](r.Level)+b.uptimeStr(r.Time.UTC().Sub(b.tsStart))+b.col.UptFunc[1](r.Level),
 	)
+	return b
 }
 
-func (b *Buffer) PushLevel(r slog.Record) {
+func (b *Buffer) PushLevel(r slog.Record) *Buffer {
 	b.arr = append(
 		b.arr,
 		b.col.LvlFunc[0](r.Level)+lMap[b.symbolSet][r.Level]+b.col.LvlFunc[1](r.Level),
 	)
+	return b
 }
 
-func (b *Buffer) PushSource(r slog.Record) {
+func (b *Buffer) PushSource(r slog.Record) *Buffer {
 	s := rec2src(r)
 	if s == nil {
-		return
+		return b
 	}
 	dir, file := filepath.Split(s.File)
 	b.arr = append(
 		b.arr,
 		fmt.Sprintf("%s<%s:%d>%s", b.col.SrcFunc[0](r.Level), filepath.Join(filepath.Base(dir), file), s.Line, b.col.SrcFunc[1](r.Level)),
 	)
+	return b
 }
 
-func (b *Buffer) PushMessage(r slog.Record) {
+func (b *Buffer) PushMessage(r slog.Record) *Buffer {
 	b.arr = append(
 		b.arr,
 		b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
 	)
+	return b
 }
 
-func (b *Buffer) PushAttr(attr slog.Attr) {
+func (b *Buffer) PushAttr(attr slog.Attr) *Buffer {
 	attr.Value = attr.Value.Resolve()
 	if attr.Equal(slog.Attr{}) || attr.Key == "" {
-		return
+		return b
 	}
 	if b.replaceAttr != nil {
 		// naive support: groups are ignored
@@ -138,7 +143,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 				b.PushAttr(slog.Attr{Key: attr.Key + "." + a.Key, Value: a.Value})
 			}
 		}
-		return
+		return b
 	}
 	key := attr.Key
 	val := attr.Value
@@ -183,6 +188,7 @@ func (b *Buffer) PushAttr(attr slog.Attr) {
 		fv = b.col.ErVFunc
 	}
 	b.arr = append(b.arr, fk[0]()+key+"="+fk[1]()+fv[0]()+val2+fv[1]())
+	return b
 }
 
 func (b *Buffer) uptimeStr(uptime time.Duration) string {
