@@ -61,44 +61,30 @@ func simpleBuf() *buffer.Buffer {
 }
 
 func TestBuffer1(t *testing.T) {
-	buf := simpleBuf()
 	r := record("hello")
-	buf.PushMessage(r)
-	buf.PushLevel(r)
+	buf := simpleBuf().PushMessage(r).PushLevel(r)
 	assert(t, buf, `^hello \[I]$`)
 }
 
 func TestBuffer2(t *testing.T) {
-	buf := simpleBuf()
 	r := record("hello")
-	buf.PushLevel(r)
-	buf.PushMessage(r)
-	assert(t, buf, `^\[I] hello$`)
+	assert(t, simpleBuf().PushLevel(r).PushMessage(r), `^\[I] hello$`)
 }
 
 func TestBuffer3(t *testing.T) {
-	buf := simpleBuf()
 	r := record("hello")
-	buf.PushSource(r)
-	buf.PushLevel(r)
-	buf.PushMessage(r)
+	buf := simpleBuf().PushSource(r).PushLevel(r).PushMessage(r)
 	assert(t, buf, `^<.+/.+\.go:[0-9]+> \[I] hello$`)
 }
 
 func TestBuffer4(t *testing.T) {
-	buf := simpleBuf()
 	r := record("hello")
-	buf.PushLevel(r)
-	buf.PushMessage(r)
-	buf.PushAttr(slog.Int("k1", 111))
+	buf := simpleBuf().PushLevel(r).PushMessage(r).PushAttr(slog.Int("k1", 111))
 	assert(t, buf, `^\[I] hello k1=111$`)
 }
 
 func TestBuffer5(t *testing.T) {
-	buf := simpleBuf()
 	r := record("hello")
-	buf.PushLevel(r)
-	buf.PushMessage(r)
-	buf.PushTime(r)
+	buf := simpleBuf().PushLevel(r).PushMessage(r).PushTime(r)
 	assert(t, buf, `^\[I] hello `+timePat+`$`)
 }
