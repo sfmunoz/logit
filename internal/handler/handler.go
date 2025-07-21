@@ -111,15 +111,15 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:
-			buf.PushTime(r)
+			buf.PushTime(&r)
 		case common.TplUptime:
-			buf.PushUptime(r)
+			buf.PushUptime(&r)
 		case common.TplLevel:
-			buf.PushLevel(r)
+			buf.PushLevel(&r)
 		case common.TplSource:
-			buf.PushSource(r)
+			buf.PushSource(&r)
 		case common.TplMessage:
-			buf.PushMessage(r)
+			buf.PushMessage(&r)
 		case common.TplAttrs:
 			g0 := make([][]any, 0)
 			g1 := []any{common.RootGroup}
@@ -145,7 +145,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 				gtmp := slog.Group(attrs[0].(string), attrs[1:]...)
 				gRoot = &gtmp
 			}
-			buf.PushAttr(*gRoot)
+			buf.PushAttr(gRoot)
 		}
 	}
 	if buf.Len() == 0 {

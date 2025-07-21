@@ -70,7 +70,7 @@ func (b *Buffer) WriteTo(w io.Writer) (n int64, err error) {
 	return int64(tot), err
 }
 
-func (b *Buffer) PushTime(r slog.Record) *Buffer {
+func (b *Buffer) PushTime(r *slog.Record) *Buffer {
 	if r.Time.IsZero() {
 		return b
 	}
@@ -81,7 +81,7 @@ func (b *Buffer) PushTime(r slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) PushUptime(r slog.Record) *Buffer {
+func (b *Buffer) PushUptime(r *slog.Record) *Buffer {
 	if r.Time.IsZero() {
 		return b
 	}
@@ -92,7 +92,7 @@ func (b *Buffer) PushUptime(r slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) PushLevel(r slog.Record) *Buffer {
+func (b *Buffer) PushLevel(r *slog.Record) *Buffer {
 	b.arr = append(
 		b.arr,
 		b.col.LvlFunc[0](r.Level)+lMap[b.symbolSet][r.Level]+b.col.LvlFunc[1](r.Level),
@@ -100,7 +100,7 @@ func (b *Buffer) PushLevel(r slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) PushSource(r slog.Record) *Buffer {
+func (b *Buffer) PushSource(r *slog.Record) *Buffer {
 	s := rec2src(r)
 	if s == nil {
 		return b
@@ -113,7 +113,7 @@ func (b *Buffer) PushSource(r slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) PushMessage(r slog.Record) *Buffer {
+func (b *Buffer) PushMessage(r *slog.Record) *Buffer {
 	b.arr = append(
 		b.arr,
 		b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
@@ -121,26 +121,26 @@ func (b *Buffer) PushMessage(r slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) PushAttr(attr slog.Attr) *Buffer {
+func (b *Buffer) PushAttr(attr *slog.Attr) *Buffer {
 	attr.Value = attr.Value.Resolve()
 	if attr.Equal(slog.Attr{}) || attr.Key == "" {
 		return b
 	}
 	if b.replaceAttr != nil {
 		// naive support: groups are ignored
-		if attrNew := b.replaceAttr(nil, attr); !attrNew.Equal(slog.Attr{}) {
-			attr = attrNew
+		if attrNew := b.replaceAttr(nil, *attr); !attrNew.Equal(slog.Attr{}) {
+			attr = &attrNew
 		}
 	}
 	kind := attr.Value.Kind()
 	if kind == slog.KindGroup {
 		if attr.Key == common.RootGroup {
 			for _, a := range attr.Value.Group() {
-				b.PushAttr(a)
+				b.PushAttr(&a)
 			}
 		} else {
 			for _, a := range attr.Value.Group() {
-				b.PushAttr(slog.Attr{Key: attr.Key + "." + a.Key, Value: a.Value})
+				b.PushAttr(&slog.Attr{Key: attr.Key + "." + a.Key, Value: a.Value})
 			}
 		}
 		return b
@@ -208,7 +208,7 @@ func (b *Buffer) uptimeStr(uptime time.Duration) string {
 	return fmt.Sprintf("%dd%02dh%02dm%02d.%03ds", days, hours, mins, secs, msecs)
 }
 
-func rec2src(r slog.Record) *slog.Source {
+func rec2src(r *slog.Record) *slog.Source {
 	fs := runtime.CallersFrames([]uintptr{r.PC})
 	f, _ := fs.Next()
 	if f.File == "" {
