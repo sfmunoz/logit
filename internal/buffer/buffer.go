@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -46,11 +45,12 @@ type Buffer struct {
 	col         *color.Color
 	tsStart     time.Time
 	symbolSet   common.SymbolSet
+	attrsMode   common.AttrsMode
 	uptimeFmt   common.UptimeFormat
 	replaceAttr common.ReplaceAttr
 }
 
-func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, symbolSet common.SymbolSet, uptimeFmt common.UptimeFormat, replaceAttr common.ReplaceAttr) *Buffer {
+func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, symbolSet common.SymbolSet, uptimeFmt common.UptimeFormat, attrsMode common.AttrsMode, replaceAttr common.ReplaceAttr) *Buffer {
 	return &Buffer{
 		arr:         make([]string, 0, 20),
 		timeFmt:     timeFmt,
@@ -58,6 +58,7 @@ func NewBuffer(timeFmt string, col *color.Color, tsStart time.Time, symbolSet co
 		tsStart:     tsStart,
 		symbolSet:   symbolSet,
 		uptimeFmt:   uptimeFmt,
+		attrsMode:   attrsMode,
 		replaceAttr: replaceAttr,
 	}
 }
@@ -71,24 +72,28 @@ func (b *Buffer) WriteTo(w io.Writer) (n int64, err error) {
 	return int64(tot), err
 }
 
-func (b *Buffer) pushTime(r *slog.Record, asAttr bool) *Buffer {
+func (b *Buffer) pushTime(r *slog.Record, attrsReq common.AttrsMode) *Buffer {
 	if r.Time.IsZero() {
 		return b
 	}
-	if asAttr {
-		a := slog.Time(slog.TimeKey, r.Time)
-		b.PushAttr(&a)
-	} else {
+	if attrsReq != b.attrsMode {
+		return b
+	}
+	switch attrsReq {
+	case common.AttrsStd:
 		b.arr = append(
 			b.arr,
 			b.col.TimFunc[0](r.Level)+r.Time.Format(b.timeFmt)+b.col.TimFunc[1](r.Level),
 		)
+	case common.AttrsBuiltin:
+		a := slog.Time(slog.TimeKey, r.Time)
+		b.PushAttr(&a)
 	}
 	return b
 }
 
 func (b *Buffer) PushTime(r *slog.Record) *Buffer {
-	return b.pushTime(r, false)
+	return b.pushTime(r, common.AttrsStd)
 }
 
 func (b *Buffer) PushUptime(r *slog.Record) *Buffer {
@@ -102,71 +107,80 @@ func (b *Buffer) PushUptime(r *slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) pushLevel(r *slog.Record, asAttr bool) *Buffer {
-	if asAttr {
-		a := slog.Any(slog.LevelKey, r.Level)
-		b.PushAttr(&a)
-	} else {
+func (b *Buffer) pushLevel(r *slog.Record, attrsReq common.AttrsMode) *Buffer {
+	if attrsReq != b.attrsMode {
+		return b
+	}
+	switch attrsReq {
+	case common.AttrsStd:
 		b.arr = append(
 			b.arr,
 			b.col.LvlFunc[0](r.Level)+lMap[b.symbolSet][r.Level]+b.col.LvlFunc[1](r.Level),
 		)
+	case common.AttrsBuiltin:
+		a := slog.Any(slog.LevelKey, r.Level)
+		b.PushAttr(&a)
 	}
 	return b
 }
 
 func (b *Buffer) PushLevel(r *slog.Record) *Buffer {
-	return b.pushLevel(r, false)
+	return b.pushLevel(r, common.AttrsStd)
 }
 
-func (b *Buffer) pushSource(r *slog.Record, asAttr bool) *Buffer {
+func (b *Buffer) pushSource(r *slog.Record, attrsReq common.AttrsMode) *Buffer {
+	if attrsReq != b.attrsMode {
+		return b
+	}
 	s := rec2src(r)
 	if s == nil {
 		return b
 	}
 	dir, file := filepath.Split(s.File)
 	sourceKey := fmt.Sprintf("%s:%d", filepath.Join(filepath.Base(dir), file), s.Line)
-	if asAttr {
-		a := slog.Any(slog.SourceKey, sourceKey)
-		b.PushAttr(&a)
-	} else {
+	switch attrsReq {
+	case common.AttrsStd:
 		b.arr = append(
 			b.arr,
 			fmt.Sprintf("%s<%s>%s", b.col.SrcFunc[0](r.Level), sourceKey, b.col.SrcFunc[1](r.Level)),
 		)
+	case common.AttrsBuiltin:
+		a := slog.Any(slog.SourceKey, sourceKey)
+		b.PushAttr(&a)
 	}
 	return b
 }
 
 func (b *Buffer) PushSource(r *slog.Record) *Buffer {
-	return b.pushSource(r, false)
+	return b.pushSource(r, common.AttrsStd)
 }
 
-func (b *Buffer) pushMessage(r *slog.Record, asAttr bool) *Buffer {
-	if asAttr {
-		a := slog.Any(slog.MessageKey, r.Message)
-		b.PushAttr(&a)
-	} else {
+func (b *Buffer) pushMessage(r *slog.Record, attrsReq common.AttrsMode) *Buffer {
+	if attrsReq != b.attrsMode {
+		return b
+	}
+	switch attrsReq {
+	case common.AttrsStd:
 		b.arr = append(
 			b.arr,
 			b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
 		)
+	case common.AttrsBuiltin:
+		a := slog.Any(slog.MessageKey, r.Message)
+		b.PushAttr(&a)
 	}
 	return b
 }
 
 func (b *Buffer) PushMessage(r *slog.Record) *Buffer {
-	return b.pushMessage(r, false)
+	return b.pushMessage(r, common.AttrsStd)
 }
 
-func (b *Buffer) PushAttrDefault(r *slog.Record) {
-	if os.Getenv("LOGIT_DEFAULT_ARGS") != "1" {
-		return
-	}
-	b.pushTime(r, true)
-	b.pushLevel(r, true)
-	b.pushSource(r, true)
-	b.pushMessage(r, true)
+func (b *Buffer) PushAttrBuiltin(r *slog.Record) {
+	b.pushTime(r, common.AttrsBuiltin)
+	b.pushLevel(r, common.AttrsBuiltin)
+	b.pushSource(r, common.AttrsBuiltin)
+	b.pushMessage(r, common.AttrsBuiltin)
 }
 
 func (b *Buffer) PushAttr(attr *slog.Attr) *Buffer {

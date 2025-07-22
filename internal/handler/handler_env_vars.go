@@ -86,3 +86,13 @@ func LogitSymbolSetEnv() common.SymbolSet {
 	}
 	return common.SymbolNone // default
 }
+
+func LogitAttrsModeEnv() common.AttrsMode {
+	switch os.Getenv("LOGIT_ATTRS_MODE") {
+	case "std", "STD":
+		return common.AttrsStd
+	case "builtin", "BUILTIN":
+		return common.AttrsBuiltin
+	}
+	return common.AttrsStd // default
+}

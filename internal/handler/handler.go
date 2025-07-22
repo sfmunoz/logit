@@ -42,6 +42,7 @@ type Handler struct {
 	symbolSet   common.SymbolSet
 	tpl         []common.Tpl
 	uptimeFmt   common.UptimeFormat
+	attrsMode   common.AttrsMode
 	replaceAttr common.ReplaceAttr
 }
 
@@ -69,6 +70,7 @@ func NewHandler() *Handler {
 			common.TplAttrs,
 		},
 		uptimeFmt:   LogitUptimeFormatEnv(),
+		attrsMode:   LogitAttrsModeEnv(),
 		replaceAttr: nil,
 	}
 }
@@ -86,6 +88,7 @@ func (h *Handler) clone() *Handler {
 		symbolSet:   h.symbolSet,
 		tpl:         make([]common.Tpl, len(h.tpl)),
 		uptimeFmt:   h.uptimeFmt,
+		attrsMode:   h.attrsMode,
 		replaceAttr: h.replaceAttr,
 	}
 	for i, a := range h.attrs {
@@ -107,7 +110,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
 	}
-	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.symbolSet, h.uptimeFmt, h.replaceAttr)
+	buf := buffer.NewBuffer(h.timeFormat, h.colorObj, h.tsStart, h.symbolSet, h.uptimeFmt, h.attrsMode, h.replaceAttr)
 	for _, tpl := range h.tpl {
 		switch tpl {
 		case common.TplTime:
@@ -121,7 +124,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		case common.TplMessage:
 			buf.PushMessage(&r)
 		case common.TplAttrs:
-			buf.PushAttrDefault(&r)
+			buf.PushAttrBuiltin(&r)
 			g0 := make([][]any, 0)
 			g1 := []any{common.RootGroup}
 			for _, a := range h.attrs {
