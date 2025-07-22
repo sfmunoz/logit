@@ -57,7 +57,7 @@ func assert(t *testing.T, buf *buffer.Buffer, re string) {
 }
 
 func simpleBuf() *buffer.Buffer {
-	return buffer.NewBuffer(timeFmt, colorOff, tsStart, common.SymbolNone, common.UptimeStd, nil)
+	return buffer.NewBuffer(timeFmt, colorOff, tsStart, common.SymbolNone, common.UptimeStd, common.AttrsStd, nil)
 }
 
 func TestBuffer1(t *testing.T) {

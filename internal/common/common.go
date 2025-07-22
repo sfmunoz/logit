@@ -11,6 +11,7 @@ type ColorMode int
 type SymbolSet int
 type Tpl int
 type UptimeFormat int
+type AttrsMode int
 type ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 
 const (
@@ -40,6 +41,9 @@ const (
 
 	UptimeAdhoc UptimeFormat = iota
 	UptimeStd
+
+	AttrsStd AttrsMode = iota
+	AttrsBuiltin
 
 	RootGroup = "__root__"
 )

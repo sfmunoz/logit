@@ -32,6 +32,9 @@ const (
 
 	UptimeAdhoc = common.UptimeAdhoc
 	UptimeStd   = common.UptimeStd
+
+	AttrsStd     = common.AttrsStd
+	AttrsBuiltin = common.AttrsBuiltin
 )
 
 // make sure Level* constants are in the right order
