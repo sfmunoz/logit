@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
-	"runtime"
 	"sync"
 	"time"
 
@@ -105,26 +103,6 @@ func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= h.level.Level()
 }
 
-func (h *Handler) pushDefaultArgs(r *slog.Record, b *buffer.Buffer) {
-	if os.Getenv("LOGIT_DEFAULT_ARGS") != "1" {
-		return
-	}
-	if !r.Time.IsZero() {
-		a := slog.Time(slog.TimeKey, r.Time)
-		b.PushAttr(&a)
-	}
-	a1 := slog.Any(slog.LevelKey, r.Level)
-	b.PushAttr(&a1)
-	if r.PC != 0 {
-		fs := runtime.CallersFrames([]uintptr{r.PC})
-		f, _ := fs.Next()
-		a := slog.Any(slog.SourceKey, fmt.Sprintf("%s:%d", f.File, f.Line))
-		b.PushAttr(&a)
-	}
-	a2 := slog.Any(slog.MessageKey, r.Message)
-	b.PushAttr(&a2)
-}
-
 func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	for _, hh := range h.handlers {
 		_ = hh.Handle(ctx, r.Clone())
@@ -143,7 +121,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		case common.TplMessage:
 			buf.PushMessage(&r)
 		case common.TplAttrs:
-			h.pushDefaultArgs(&r, buf)
+			buf.PushAttrDefault(&r)
 			g0 := make([][]any, 0)
 			g1 := []any{common.RootGroup}
 			for _, a := range h.attrs {

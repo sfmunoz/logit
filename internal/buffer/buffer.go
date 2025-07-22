@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -119,6 +120,26 @@ func (b *Buffer) PushMessage(r *slog.Record) *Buffer {
 		b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
 	)
 	return b
+}
+
+func (b *Buffer) PushAttrDefault(r *slog.Record) {
+	if os.Getenv("LOGIT_DEFAULT_ARGS") != "1" {
+		return
+	}
+	if !r.Time.IsZero() {
+		a := slog.Time(slog.TimeKey, r.Time)
+		b.PushAttr(&a)
+	}
+	a1 := slog.Any(slog.LevelKey, r.Level)
+	b.PushAttr(&a1)
+	if r.PC != 0 {
+		fs := runtime.CallersFrames([]uintptr{r.PC})
+		f, _ := fs.Next()
+		a := slog.Any(slog.SourceKey, fmt.Sprintf("%s:%d", f.File, f.Line))
+		b.PushAttr(&a)
+	}
+	a2 := slog.Any(slog.MessageKey, r.Message)
+	b.PushAttr(&a2)
 }
 
 func (b *Buffer) PushAttr(attr *slog.Attr) *Buffer {
