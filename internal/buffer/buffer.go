@@ -119,17 +119,27 @@ func (b *Buffer) PushLevel(r *slog.Record) *Buffer {
 	return b.pushLevel(r, false)
 }
 
-func (b *Buffer) PushSource(r *slog.Record) *Buffer {
+func (b *Buffer) pushSource(r *slog.Record, asAttr bool) *Buffer {
 	s := rec2src(r)
 	if s == nil {
 		return b
 	}
 	dir, file := filepath.Split(s.File)
-	b.arr = append(
-		b.arr,
-		fmt.Sprintf("%s<%s:%d>%s", b.col.SrcFunc[0](r.Level), filepath.Join(filepath.Base(dir), file), s.Line, b.col.SrcFunc[1](r.Level)),
-	)
+	sourceKey := fmt.Sprintf("%s:%d", filepath.Join(filepath.Base(dir), file), s.Line)
+	if asAttr {
+		a := slog.Any(slog.SourceKey, sourceKey)
+		b.PushAttr(&a)
+	} else {
+		b.arr = append(
+			b.arr,
+			fmt.Sprintf("%s<%s>%s", b.col.SrcFunc[0](r.Level), sourceKey, b.col.SrcFunc[1](r.Level)),
+		)
+	}
 	return b
+}
+
+func (b *Buffer) PushSource(r *slog.Record) *Buffer {
+	return b.pushSource(r, false)
 }
 
 func (b *Buffer) PushMessage(r *slog.Record) *Buffer {
@@ -146,12 +156,7 @@ func (b *Buffer) PushAttrDefault(r *slog.Record) {
 	}
 	b.pushTime(r, true)
 	b.pushLevel(r, true)
-	if r.PC != 0 {
-		fs := runtime.CallersFrames([]uintptr{r.PC})
-		f, _ := fs.Next()
-		a := slog.Any(slog.SourceKey, fmt.Sprintf("%s:%d", f.File, f.Line))
-		b.PushAttr(&a)
-	}
+	b.pushSource(r, true)
 	a2 := slog.Any(slog.MessageKey, r.Message)
 	b.PushAttr(&a2)
 }
