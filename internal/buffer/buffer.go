@@ -142,12 +142,21 @@ func (b *Buffer) PushSource(r *slog.Record) *Buffer {
 	return b.pushSource(r, false)
 }
 
-func (b *Buffer) PushMessage(r *slog.Record) *Buffer {
-	b.arr = append(
-		b.arr,
-		b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
-	)
+func (b *Buffer) pushMessage(r *slog.Record, asAttr bool) *Buffer {
+	if asAttr {
+		a := slog.Any(slog.MessageKey, r.Message)
+		b.PushAttr(&a)
+	} else {
+		b.arr = append(
+			b.arr,
+			b.col.MsgFunc[0](r.Level)+r.Message+b.col.MsgFunc[1](r.Level),
+		)
+	}
 	return b
+}
+
+func (b *Buffer) PushMessage(r *slog.Record) *Buffer {
+	return b.pushMessage(r, false)
 }
 
 func (b *Buffer) PushAttrDefault(r *slog.Record) {
@@ -157,8 +166,7 @@ func (b *Buffer) PushAttrDefault(r *slog.Record) {
 	b.pushTime(r, true)
 	b.pushLevel(r, true)
 	b.pushSource(r, true)
-	a2 := slog.Any(slog.MessageKey, r.Message)
-	b.PushAttr(&a2)
+	b.pushMessage(r, true)
 }
 
 func (b *Buffer) PushAttr(attr *slog.Attr) *Buffer {
