@@ -71,15 +71,24 @@ func (b *Buffer) WriteTo(w io.Writer) (n int64, err error) {
 	return int64(tot), err
 }
 
-func (b *Buffer) PushTime(r *slog.Record) *Buffer {
+func (b *Buffer) pushTime(r *slog.Record, asAttr bool) *Buffer {
 	if r.Time.IsZero() {
 		return b
 	}
-	b.arr = append(
-		b.arr,
-		b.col.TimFunc[0](r.Level)+r.Time.Format(b.timeFmt)+b.col.TimFunc[1](r.Level),
-	)
+	if asAttr {
+		a := slog.Time(slog.TimeKey, r.Time)
+		b.PushAttr(&a)
+	} else {
+		b.arr = append(
+			b.arr,
+			b.col.TimFunc[0](r.Level)+r.Time.Format(b.timeFmt)+b.col.TimFunc[1](r.Level),
+		)
+	}
 	return b
+}
+
+func (b *Buffer) PushTime(r *slog.Record) *Buffer {
+	return b.pushTime(r, false)
 }
 
 func (b *Buffer) PushUptime(r *slog.Record) *Buffer {
@@ -126,10 +135,7 @@ func (b *Buffer) PushAttrDefault(r *slog.Record) {
 	if os.Getenv("LOGIT_DEFAULT_ARGS") != "1" {
 		return
 	}
-	if !r.Time.IsZero() {
-		a := slog.Time(slog.TimeKey, r.Time)
-		b.PushAttr(&a)
-	}
+	b.pushTime(r, true)
 	a1 := slog.Any(slog.LevelKey, r.Level)
 	b.PushAttr(&a1)
 	if r.PC != 0 {
