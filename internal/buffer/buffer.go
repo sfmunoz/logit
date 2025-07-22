@@ -102,12 +102,21 @@ func (b *Buffer) PushUptime(r *slog.Record) *Buffer {
 	return b
 }
 
-func (b *Buffer) PushLevel(r *slog.Record) *Buffer {
-	b.arr = append(
-		b.arr,
-		b.col.LvlFunc[0](r.Level)+lMap[b.symbolSet][r.Level]+b.col.LvlFunc[1](r.Level),
-	)
+func (b *Buffer) pushLevel(r *slog.Record, asAttr bool) *Buffer {
+	if asAttr {
+		a := slog.Any(slog.LevelKey, r.Level)
+		b.PushAttr(&a)
+	} else {
+		b.arr = append(
+			b.arr,
+			b.col.LvlFunc[0](r.Level)+lMap[b.symbolSet][r.Level]+b.col.LvlFunc[1](r.Level),
+		)
+	}
 	return b
+}
+
+func (b *Buffer) PushLevel(r *slog.Record) *Buffer {
+	return b.pushLevel(r, false)
 }
 
 func (b *Buffer) PushSource(r *slog.Record) *Buffer {
@@ -136,8 +145,7 @@ func (b *Buffer) PushAttrDefault(r *slog.Record) {
 		return
 	}
 	b.pushTime(r, true)
-	a1 := slog.Any(slog.LevelKey, r.Level)
-	b.PushAttr(&a1)
+	b.pushLevel(r, true)
 	if r.PC != 0 {
 		fs := runtime.CallersFrames([]uintptr{r.PC})
 		f, _ := fs.Next()
