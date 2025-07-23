@@ -56,36 +56,50 @@ func assert(t *testing.T, buf *buffer.Buffer, re string) {
 	}
 }
 
-func simpleBuf() *buffer.Buffer {
-	return buffer.NewBuffer(timeFmt, colorOff, tsStart, common.SymbolNone, common.UptimeStd, common.AttrsStd, nil)
+func simpleBuf(replaceAttr common.ReplaceAttr) *buffer.Buffer {
+	return buffer.NewBuffer(timeFmt, colorOff, tsStart, common.SymbolNone, common.UptimeStd, common.AttrsStd, replaceAttr)
 }
 
 func TestBuffer1(t *testing.T) {
 	r := record("hello")
-	buf := simpleBuf().PushMessage(r).PushLevel(r)
+	buf := simpleBuf(nil).PushMessage(r).PushLevel(r)
 	assert(t, buf, `^hello \[I]$`)
 }
 
 func TestBuffer2(t *testing.T) {
 	r := record("hello")
-	assert(t, simpleBuf().PushLevel(r).PushMessage(r), `^\[I] hello$`)
+	assert(t, simpleBuf(nil).PushLevel(r).PushMessage(r), `^\[I] hello$`)
 }
 
 func TestBuffer3(t *testing.T) {
 	r := record("hello")
-	buf := simpleBuf().PushSource(r).PushLevel(r).PushMessage(r)
+	buf := simpleBuf(nil).PushSource(r).PushLevel(r).PushMessage(r)
 	assert(t, buf, `^<.+/.+\.go:[0-9]+> \[I] hello$`)
 }
 
 func TestBuffer4(t *testing.T) {
 	r := record("hello")
 	a := slog.Int("k1", 111)
-	buf := simpleBuf().PushLevel(r).PushMessage(r).PushAttr(&a)
+	buf := simpleBuf(nil).PushLevel(r).PushMessage(r).PushAttr(&a)
 	assert(t, buf, `^\[I] hello k1=111$`)
 }
 
 func TestBuffer5(t *testing.T) {
 	r := record("hello")
-	buf := simpleBuf().PushLevel(r).PushMessage(r).PushTime(r)
+	buf := simpleBuf(nil).PushLevel(r).PushMessage(r).PushTime(r)
 	assert(t, buf, `^\[I] hello `+timePat+`$`)
+}
+
+func TestBuffer6(t *testing.T) {
+	repAttr := func(groups []string, a slog.Attr) slog.Attr {
+		return slog.Attr{
+			Key:   "rep-" + a.Key,
+			Value: a.Value,
+		}
+	}
+	r := record("hello")
+	a1 := slog.Int("k1", 111)
+	a2 := slog.Int("k2", 222)
+	buf := simpleBuf(repAttr).PushLevel(r).PushMessage(r).PushTime(r).PushAttr(&a1).PushAttr(&a2)
+	assert(t, buf, `^\[I] hello `+timePat+` rep-k1=111 rep-k2=222$`)
 }
