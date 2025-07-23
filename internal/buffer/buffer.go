@@ -188,8 +188,11 @@ func (b *Buffer) PushAttr(attr *slog.Attr) *Buffer {
 	if attr.Equal(slog.Attr{}) || attr.Key == "" {
 		return b
 	}
+	// https://github.com/sfmunoz/logit/issues/15 - handler.ReplaceAttr(): make use of groups
+	// https://github.com/golang/example/blob/master/slog-handler-guide/README.md#implementing-handler-methods ->
+	// -> https://pkg.go.dev/log/slog#HandlerOptions.ReplaceAttr
 	if b.replaceAttr != nil {
-		// naive support: groups are ignored
+		// naive support: groups are ignored -> it's OK for now despite #15 issue
 		if attrNew := b.replaceAttr(nil, *attr); !attrNew.Equal(slog.Attr{}) {
 			attr = &attrNew
 		}
