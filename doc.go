@@ -47,7 +47,6 @@ Detailed configuration:
 	package main
 
 	import (
-		"log/slog"
 		"os"
 
 		"github.com/sfmunoz/logit"
@@ -57,7 +56,7 @@ Detailed configuration:
 		With("app", "my-app").
 		WithWriter(os.Stderr).
 		WithTpl(logit.TplTime, logit.TplUptime, logit.TplLevel, logit.TplSource, logit.TplMessage, logit.TplAttrs).
-		WithLevel(slog.LevelDebug).
+		WithLevel(logit.LevelDebug).
 		WithTimeFormat("2006-01-02T15:04:05.000Z07:00").
 		WithColor(true)
 
@@ -68,6 +67,6 @@ Detailed configuration:
 Run it:
 
 	$ go run main.go
-	2025-07-14T15:11:42.757Z 0d00h00m00.000s [I] <demo/main.go:19> hello world app=my-app
+	2025-07-25T09:44:45.734Z 0d00h00m00.000s [I] <demo/main.go:18> hello world app=my-app
 */
 package logit
