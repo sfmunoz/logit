@@ -64,7 +64,6 @@ Detailed configuration:
 package main
 
 import (
-	"log/slog"
 	"os"
 
 	"github.com/sfmunoz/logit"
@@ -74,7 +73,7 @@ var log = logit.Logit().
 	With("app", "my-app").
 	WithWriter(os.Stderr).
 	WithTpl(logit.TplTime, logit.TplUptime, logit.TplLevel, logit.TplSource, logit.TplMessage, logit.TplAttrs).
-	WithLevel(slog.LevelDebug).
+	WithLevel(logit.LevelDebug).
 	WithTimeFormat("2006-01-02T15:04:05.000Z07:00").
 	WithColor(true)
 
@@ -84,7 +83,7 @@ func main() {
 ```
 Run it too with `go run main.go`:
 
-![20250714_151226.png](https://github.com/sfmunoz/logit/blob/assets/20250714_151226.png)
+![20250725_094637.png](https://github.com/sfmunoz/logit/blob/assets/20250725_094637.png)
 
 ## References
 
