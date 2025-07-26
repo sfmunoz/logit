@@ -9,3 +9,4 @@ Simple Golang logging/slog library
 
 - [https://github.com/sfmunoz/logit](https://github.com/sfmunoz/logit)
 - [https://pkg.go.dev/github.com/sfmunoz/logit](https://pkg.go.dev/github.com/sfmunoz/logit)
+- [https://sfmunoz.com/logit/](https://sfmunoz.com/logit/)
